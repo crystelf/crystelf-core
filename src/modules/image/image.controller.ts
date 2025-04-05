@@ -1,6 +1,6 @@
 import express from 'express';
 import ImageService from './image.service';
-import logger from '../../utils/logger';
+import logger from '../../utils/core/logger';
 
 class ImageController {
   private readonly router: express.Router;
