@@ -1,4 +1,4 @@
-import logger from '../../utils/logger';
+import logger from '../../utils/core/logger';
 
 class SampleService {
   getHello() {
@@ -6,7 +6,7 @@ class SampleService {
     return { message: 'Hello World!' };
   }
 
-  generateGreeting(name: string) {
+  generateGreeting(name: string): object {
     logger.debug(`有个小可爱正在请求generateGreeting方法..`);
     if (!name) {
       logger.warn('Name is required');

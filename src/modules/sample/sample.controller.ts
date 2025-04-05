@@ -1,5 +1,6 @@
 import express from 'express';
 import sampleService from './sample.service';
+import response from '../../utils/core/response';
 
 class SampleController {
   private readonly router: express.Router;
@@ -21,37 +22,24 @@ class SampleController {
   private getHello = (req: express.Request, res: express.Response): void => {
     try {
       const result = sampleService.getHello();
-      this.sendSuccess(res, result);
+      response.success(res, result);
     } catch (error) {
-      this.sendError(res, error);
+      response.error(res, '请求失败了..', 500, error);
     }
   };
 
   private postGreet = (req: express.Request, res: express.Response): void => {
     try {
       const { name } = req.body;
+      if (!name) {
+        return response.error(res, '姓名不能为空!', 400);
+      }
       const result = sampleService.generateGreeting(name);
-      this.sendSuccess(res, result);
+      response.success(res, result);
     } catch (error) {
-      this.sendError(res, error);
+      response.error(res, '请求失败了..', 500, error);
     }
   };
-
-  private sendSuccess(res: express.Response, data: any, statusCode = 200): void {
-    res.status(statusCode).json({
-      success: true,
-      data,
-      timestamp: new Date().toISOString(),
-    });
-  }
-
-  private sendError(res: express.Response, error: any, statusCode = 500): void {
-    res.status(statusCode).json({
-      success: false,
-      message: error.message,
-      timestamp: new Date().toISOString(),
-    });
-  }
 }
 
 export default new SampleController();

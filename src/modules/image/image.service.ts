@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs';
-import paths from '../../utils/path';
-import logger from '../../utils/logger';
+import paths from '../../utils/core/path';
+import logger from '../../utils/core/logger';
 
 class ImageService {
   private readonly imageDir: string;
