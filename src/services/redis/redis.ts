@@ -4,6 +4,7 @@ import tools from '../../utils/core/tool';
 import config from '../../utils/core/config';
 import redisTool from '../../utils/redis/redisTools';
 import IUser from '../../types/user';
+import Persistence from '../../utils/redis/persistence';
 
 class RedisService {
   private client!: Redis;
@@ -107,6 +108,34 @@ class RedisService {
     return redisTool.reviveDates(deserialized);
   }
 
+  public async persistUser<T extends IUser>(user: T): Promise<void> {
+    try {
+      await this.setObject(`user:${user.qq}`, user);
+      await Persistence.writeDataLocal(user.name, user);
+    } catch (err) {
+      logger.error(err);
+    }
+  }
+
+  public async fetchUser<T extends IUser>(
+    qq: string,
+    username: string
+  ): Promise<IUser | undefined> {
+    try {
+      const fromRedis = await this.getObject<IUser>(`user:${qq}`);
+      if (fromRedis) return fromRedis;
+      const fromLocal = await Persistence.readDataLocal<IUser>(username);
+      if (fromLocal) {
+        await this.setObject(`user:${qq}`, fromLocal);
+        return fromLocal;
+      }
+      logger.error(`用户${username},qq${qq}不存在！`);
+      return undefined;
+    } catch (err) {
+      logger.error(err);
+    }
+  }
+
   public async test(): Promise<void> {
     const testData: IUser = {
       name: 'Jerry',
@@ -117,6 +146,9 @@ class RedisService {
     };
     let test = redisTool.reviveDates(testData);
     logger.debug(test);
+    await this.setObject('test', test);
+    const push = await this.getObject('test');
+    logger.debug(push);
   }
 }
 
