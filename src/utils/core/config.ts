@@ -29,7 +29,7 @@ class ConfigManger {
     const value = this.env[key];
     if (value === undefined) {
       if (defaultValue !== undefined) return defaultValue;
-      logger.error(`环境变量${key}未定义！`);
+      logger.warn(`环境变量${key}未定义！`);
       return undefined as T;
     }
 
@@ -59,7 +59,7 @@ class ConfigManger {
   public check(keys: string[]): void {
     keys.forEach((key) => {
       if (!(key in this.env)) {
-        logger.error(`必须环境变量缺失:${key}`);
+        logger.fatal(1, `必须环境变量缺失:${key}`);
       } else {
         logger.debug(`检测到环境变量${key}!`);
       }
@@ -67,6 +67,6 @@ class ConfigManger {
   }
 }
 
-const Config = ConfigManger.getInstance();
+const config = ConfigManger.getInstance();
 
-export default Config;
+export default config;

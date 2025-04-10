@@ -1,6 +1,7 @@
 import express from 'express';
 import ImageService from './image.service';
 import logger from '../../utils/core/logger';
+import response from '../../utils/core/response';
 
 class ImageController {
   private readonly router: express.Router;
@@ -17,35 +18,27 @@ class ImageController {
   }
 
   private initializeRoutes(): void {
-    this.router.get('/:filename', this.handleGetImage);
+    this.router.get('*', this.handleGetImage);
   }
 
-  private handleGetImage = (req: express.Request, res: express.Response): void => {
+  private handleGetImage = async (req: express.Request, res: express.Response): Promise<void> => {
     try {
-      const filename = req.params.filename;
-      logger.debug(`有个小可爱正在请求${filename}噢..`);
-
-      const filePath = this.imageService.getImage(filename);
+      const fullPath = req.params[0];
+      logger.debug(`有个小可爱正在请求${fullPath}噢..`);
+      const filePath = await this.imageService.getImage(fullPath);
       if (!filePath) {
-        this.sendError(res, 404, '文件不存在啦！');
+        logger.warn(`${fullPath}：文件不存在..`);
+        await response.error(res, '文件不存在啦！', 404);
         return;
       }
 
       res.sendFile(filePath);
       logger.info(`成功投递文件: ${filePath}`);
     } catch (error) {
-      this.sendError(res, 500, '晶灵服务处理图像请求时出错..');
+      await response.error(res, '晶灵服务处理图像请求时出错..', 500);
       logger.error('晶灵图像请求处理失败:', error);
     }
   };
-
-  private sendError(res: express.Response, statusCode: number, message: string): void {
-    res.status(statusCode).json({
-      success: false,
-      error: message,
-      timestamp: new Date().toISOString(),
-    });
-  }
 }
 
 export default new ImageController();

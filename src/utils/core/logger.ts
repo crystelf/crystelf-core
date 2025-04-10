@@ -1,13 +1,14 @@
 import chalk from 'chalk';
-import Config from './config';
+import config from './config';
 import fc from './file';
+import date from './date';
 
 class Logger {
   private static instance: Logger;
   private readonly isDebug: boolean;
 
   private constructor() {
-    this.isDebug = Config.get('DEBUG', false);
+    this.isDebug = config.get('DEBUG', false);
   }
 
   public static getInstance(): Logger {
@@ -27,37 +28,37 @@ class Logger {
   public info(...args: any[]): void {
     const message = this.formatMessage('INFO', args);
     console.log(chalk.green(message));
-    this.logToFile('INFO', message);
+    this.logToFile(message).then();
   }
 
   public warn(...args: any[]): void {
     const message = this.formatMessage('WARN', args);
     console.log(chalk.yellow(message));
-    this.logToFile('WARN', message);
+    this.logToFile(message).then();
   }
 
   public error(...args: any[]): void {
     const message = this.formatMessage('ERROR', args);
     console.error(chalk.red(message));
-    this.logToFile('ERROR', message);
+    this.logToFile(message).then();
   }
 
-  public fatal(args: any[], exitCode: number = 1): never {
+  public fatal(exitCode: number = 1, ...args: any[]): never {
     const message = this.formatMessage('FATAL', args);
     console.error(chalk.red.bold(message));
-    this.logToFile('FATAL', message);
+    this.logToFile(message).then();
     process.exit(exitCode);
   }
 
   private formatMessage(level: string, args: any[]): string {
-    return `[${level}] ${args
+    return `[${date.getCurrentTime()}][${level}] ${args
       .map((arg) => (typeof arg === 'object' ? JSON.stringify(arg) : arg))
       .join(' ')}`;
   }
 
-  private logToFile(level: string, message: string): void {
+  private async logToFile(message: string): Promise<void> {
     try {
-      fc.logToFile(level, `${new Date().toISOString()} ${message}`);
+      await fc.logToFile(`${message}`);
     } catch (err: any) {
       console.error(chalk.red(`[LOGGER] 写入日志失败: ${err.message}`));
     }

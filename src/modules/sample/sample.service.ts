@@ -1,12 +1,12 @@
 import logger from '../../utils/core/logger';
 
 class SampleService {
-  getHello() {
+  public async getHello() {
     logger.debug(`有个小可爱正在请求GetHello方法..`);
     return { message: 'Hello World!' };
   }
 
-  generateGreeting(name: string): object {
+  public async generateGreeting(name: string): Promise<object> {
     logger.debug(`有个小可爱正在请求generateGreeting方法..`);
     if (!name) {
       logger.warn('Name is required');

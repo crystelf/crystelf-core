@@ -8,7 +8,7 @@ class response {
    * @param data 返回数据
    * @param statusCode HTTP状态码，默认200
    */
-  static success(res: Response, data: any, statusCode = 200) {
+  public static async success(res: Response, data: any, statusCode = 200) {
     res.status(statusCode).json({
       success: true,
       data,
@@ -23,7 +23,7 @@ class response {
    * @param statusCode HTTP状态码，默认500
    * @param error 原始错误对象（开发环境显示）
    */
-  static error(res: Response, message: string, statusCode = 500, error?: any) {
+  public static async error(res: Response, message: string, statusCode = 500, error?: any) {
     const response: Record<string, any> = {
       success: false,
       message,
@@ -43,7 +43,13 @@ class response {
    * @param page 当前页码
    * @param pageSize 每页条数
    */
-  static pagination(res: Response, data: any[], total: number, page: number, pageSize: number) {
+  public static async pagination(
+    res: Response,
+    data: any[],
+    total: number,
+    page: number,
+    pageSize: number
+  ) {
     res.status(200).json({
       success: true,
       data,

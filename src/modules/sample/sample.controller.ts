@@ -19,25 +19,25 @@ class SampleController {
     this.router.post('/greet', this.postGreet);
   }
 
-  private getHello = (req: express.Request, res: express.Response): void => {
+  private getHello = async (req: express.Request, res: express.Response): Promise<void> => {
     try {
-      const result = sampleService.getHello();
-      response.success(res, result);
+      const result = await sampleService.getHello();
+      await response.success(res, result);
     } catch (error) {
-      response.error(res, '请求失败了..', 500, error);
+      await response.error(res, '请求失败了..', 500, error);
     }
   };
 
-  private postGreet = (req: express.Request, res: express.Response): void => {
+  private postGreet = async (req: express.Request, res: express.Response): Promise<void> => {
     try {
       const { name } = req.body;
       if (!name) {
         return response.error(res, '姓名不能为空!', 400);
       }
       const result = sampleService.generateGreeting(name);
-      response.success(res, result);
+      await response.success(res, result);
     } catch (error) {
-      response.error(res, '请求失败了..', 500, error);
+      await response.error(res, '请求失败了..', 500, error);
     }
   };
 }

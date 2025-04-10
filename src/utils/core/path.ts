@@ -1,12 +1,14 @@
 import path from 'path';
 import fs from 'fs';
+import fc from './file';
+import logger from './logger';
 
 class PathManager {
   private static instance: PathManager;
   private readonly baseDir: string;
 
   private constructor() {
-    this.baseDir = path.join(__dirname, '../..');
+    this.baseDir = path.join(__dirname, '../../..');
   }
 
   /**
@@ -34,6 +36,18 @@ class PathManager {
     };
 
     return type ? mappings[type] : this.baseDir;
+  }
+
+  /**
+   * 初始化
+   */
+  public init(): void {
+    const logPath = this.get('log');
+    const imagePath = this.get('images');
+    fc.createDir(logPath, false);
+    fc.createDir(imagePath, false);
+    logger.debug(`日志目录初始化: ${logPath}`);
+    logger.debug(`图像目录初始化: ${imagePath}`);
   }
 
   /**
