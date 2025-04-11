@@ -108,12 +108,25 @@ class RedisService {
     return redisTool.reviveDates(deserialized);
   }
 
+  public async updateUser(qq: string, updates: Partial<IUser>): Promise<IUser> {
+    const existing = await this.getObject<IUser>(`user:${qq}`);
+    if (!existing) {
+      throw new Error(`用户 ${qq} 不存在`);
+    }
+    const updatedUser = { ...existing, ...updates, updatedAt: new Date() };
+    await this.persistUser(updatedUser);
+    return updatedUser;
+  }
+
   public async persistUser<T extends IUser>(user: T): Promise<void> {
     try {
-      await this.setObject(`user:${user.qq}`, user);
-      await Persistence.writeDataLocal(user.name, user);
+      await Promise.all([
+        this.setObject(`user:${user.qq}`, user),
+        Persistence.writeDataLocal(user.name, user),
+      ]);
     } catch (err) {
       logger.error(err);
+      throw err;
     }
   }
 
@@ -124,15 +137,18 @@ class RedisService {
     try {
       const fromRedis = await this.getObject<IUser>(`user:${qq}`);
       if (fromRedis) return fromRedis;
+
       const fromLocal = await Persistence.readDataLocal<IUser>(username);
       if (fromLocal) {
         await this.setObject(`user:${qq}`, fromLocal);
         return fromLocal;
       }
+
       logger.error(`用户${username},qq${qq}不存在！`);
       return undefined;
     } catch (err) {
       logger.error(err);
+      throw err;
     }
   }
 
@@ -144,11 +160,10 @@ class RedisService {
       password: '114514',
       createdAt: new Date(),
     };
-    let test = redisTool.reviveDates(testData);
-    logger.debug(test);
-    await this.setObject('test', test);
-    const push = await this.getObject('test');
-    logger.debug(push);
+
+    await this.persistUser(testData);
+    const user = await this.fetchUser('114514', 'Jerry');
+    logger.debug(user);
   }
 }
 
