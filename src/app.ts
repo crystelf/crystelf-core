@@ -4,6 +4,7 @@ import paths from './utils/core/path';
 import sampleController from './modules/sample/sample.controller';
 import imageController from './modules/image/image.controller';
 import config from './utils/core/config';
+import './services/ws/wsServer';
 
 const apps = {
   async createApp() {
