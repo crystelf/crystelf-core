@@ -36,6 +36,10 @@ class fc {
     }
   }
 
+  /**
+   * 输出日志到文件
+   * @param message
+   */
   public static async logToFile(message: string): Promise<void> {
     const logFile = path.join(paths.get('log'), `${date.getCurrentDate()}.log`);
     const logMessage = `${message}\n`;

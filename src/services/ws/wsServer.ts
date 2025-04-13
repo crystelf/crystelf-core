@@ -1,71 +1,82 @@
 import WebSocket, { WebSocketServer } from 'ws';
 import config from '../../utils/core/config';
-import wsClientManager from './wsClientManager';
-import wsHandler from './handler';
 import logger from '../../utils/core/logger';
-
-interface AuthenticatedSocket extends WebSocket {
-  isAuthed?: boolean;
-  clientId?: string;
-}
+import { AuthenticatedSocket, AuthMessage, WSMessage } from '../../types/ws';
+import WsTools from '../../utils/ws/wsTools';
+import wsHandler from './handler';
+import { clearInterval } from 'node:timers';
+import wsClientManager from './wsClientManager';
 
 class WSServer {
-  private wss: WebSocketServer;
-  private PORT = config.get('WS_PORT');
-  private WS_SECRET = config.get('WS_SECRET');
+  private readonly wss: WebSocketServer;
+  private readonly port = Number(config.get('WS_PORT'));
+  private readonly secret = config.get('WS_SECRET');
 
   constructor() {
-    this.wss = new WebSocketServer({ port: Number(this.PORT) });
+    this.wss = new WebSocketServer({ port: this.port });
     this.init();
-    logger.info(`WebSocket Server started at ws://localhost:${this.PORT}`);
+    logger.info(`WS Server listening on ws://localhost:${this.port}`);
   }
 
-  private init() {
+  private init(): void {
     this.wss.on('connection', (socket: AuthenticatedSocket) => {
+      socket.heartbeat = WsTools.setUpHeartbeat(socket);
+
       socket.on('message', async (raw) => {
-        let msg: any;
-        try {
-          msg = JSON.parse(raw.toString());
-        } catch {
-          return this.send(socket, { type: 'error', message: 'JSON 解析失败' });
-        }
+        const msg = WsTools.parseMessage<WSMessage>(raw);
+        if (!msg) return this.handleInvalidMessage(socket);
 
-        // 鉴权
-        if (!socket.isAuthed) {
-          if (msg.type === 'auth' && msg.secret === this.WS_SECRET && msg.clientId) {
-            socket.isAuthed = true;
-            socket.clientId = msg.clientId;
-            wsClientManager.add(msg.clientId, socket);
-            return this.send(socket, { type: 'auth', success: true });
-          }
-          return this.send(socket, { type: 'auth', success: false });
-        }
-
-        // 业务处理
-        if (socket.clientId) {
-          try {
-            await wsHandler.handle(socket, socket.clientId, msg);
-          } catch (e) {
-            await this.send(socket, { type: 'error', message: '处理出错' });
-          }
-        }
+        await this.routeMessage(socket, msg);
       });
 
       socket.on('close', () => {
-        if (socket.clientId) {
-          wsClientManager.remove(socket.clientId);
-        }
+        this.handleDisconnect(socket);
       });
     });
   }
 
-  private async send(socket: WebSocket, data: any): Promise<void> {
-    return new Promise((resolve, reject) => {
-      socket.send(JSON.stringify(data), (err) => {
-        if (err) reject(err);
-        else resolve();
-      });
+  private async handleInvalidMessage(socket: WebSocket) {
+    await WsTools.send(socket, {
+      type: 'error',
+      message: 'Invalid message format',
     });
+  }
+
+  private async routeMessage(socket: AuthenticatedSocket, msg: WSMessage) {
+    if (!socket.isAuthed) {
+      if (this.isAuthMessage(msg)) {
+        await this.handleAuth(socket, msg);
+      }
+      return;
+    }
+
+    if (socket.clientId) {
+      await wsHandler.handle(socket, socket.clientId, msg);
+    }
+  }
+
+  private isAuthMessage(msg: WSMessage): msg is AuthMessage {
+    return (
+      msg.type === 'auth' &&
+      typeof (msg as AuthMessage).secret === 'string' &&
+      typeof (msg as AuthMessage).clientId === 'string'
+    );
+  }
+
+  private async handleAuth(socket: AuthenticatedSocket, msg: AuthMessage) {
+    if (msg.secret === this.secret) {
+      socket.isAuthed = true;
+      socket.clientId = msg.clientId;
+      wsClientManager.add(msg.clientId, socket);
+      await WsTools.send(socket, { type: 'auth', success: true });
+    } else {
+      await WsTools.send(socket, { type: 'auth', success: false });
+    }
+  }
+
+  private handleDisconnect(socket: AuthenticatedSocket) {
+    if (socket.heartbeat) clearInterval(socket.heartbeat);
+    if (socket.clientId) wsClientManager.remove(socket.clientId);
   }
 }
 

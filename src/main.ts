@@ -3,7 +3,7 @@ import logger from './utils/core/logger';
 import config from './utils/core/config';
 import redis from './services/redis/redis';
 
-config.check(['PORT', 'DEBUG', 'RD_PORT', 'RD_ADD']);
+config.check(['PORT', 'DEBUG', 'RD_PORT', 'RD_ADD', 'WS_SECRET', 'WS_PORT']);
 const PORT = config.get('PORT') || 3000;
 
 apps

@@ -17,6 +17,7 @@ class RedisService {
   private async initialize() {
     await this.connectWithRetry();
     this.setupEventListeners();
+    //await this.test();
   }
 
   private async connectWithRetry(): Promise<void> {

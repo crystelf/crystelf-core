@@ -1,27 +1,41 @@
-import WebSocket from 'ws';
-import WsMessage from '../../types/wsMessage';
+import { AuthenticatedSocket } from '../../types/ws';
+import wsTools from '../../utils/ws/wsTools';
+import * as ws from 'ws';
+
+type WebSocket = ws.WebSocket;
 
 class WSMessageHandler {
-  public async handle(socket: WebSocket, clientID: string, msg: WsMessage) {
-    switch (msg.type) {
-      case 'test':
-        await this.reply(socket, { type: 'test', data: 'hi' });
-        break;
-      case 'ping':
-        await this.reply(socket, { type: 'pong' });
-        break;
-      default:
-        await this.reply(socket, { type: 'error', message: 'Unknown message' });
-        break;
+  async handle(socket: AuthenticatedSocket, clientId: string, msg: any) {
+    try {
+      switch (msg.type) {
+        case 'test':
+          await this.handleTest(socket);
+          break;
+        case 'ping':
+          await wsTools.send(socket, { type: 'pong' });
+          break;
+        default:
+          await this.handleUnknown(socket);
+      }
+    } catch (err) {
+      await wsTools.send(socket, {
+        type: 'error',
+        message: 'Processing failed',
+      });
     }
   }
 
-  private async reply(socket: WebSocket, data: any): Promise<void> {
-    return new Promise((resolve, reject) => {
-      socket.send(JSON.stringify(data), (err) => {
-        if (err) reject(err);
-        else resolve();
-      });
+  private async handleTest(socket: WebSocket) {
+    await wsTools.send(socket, {
+      type: 'test',
+      data: { status: 'ok' },
+    });
+  }
+
+  private async handleUnknown(socket: WebSocket) {
+    await wsTools.send(socket, {
+      type: 'error',
+      message: 'Unknown message type',
     });
   }
 }
