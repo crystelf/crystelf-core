@@ -34,7 +34,7 @@ class SampleController {
       if (!name) {
         return response.error(res, '姓名不能为空!', 400);
       }
-      const result = sampleService.generateGreeting(name);
+      const result = await sampleService.generateGreeting(name);
       await response.success(res, result);
     } catch (error) {
       await response.error(res, '请求失败了..', 500, error);
