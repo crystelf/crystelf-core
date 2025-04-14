@@ -70,11 +70,7 @@ class WSServer {
   }
 
   private isAuthMessage(msg: WSMessage): msg is AuthMessage {
-    return (
-      msg.type === 'auth' &&
-      typeof (msg as AuthMessage).secret === 'string' &&
-      typeof (msg as AuthMessage).clientId === 'string'
-    );
+    return msg.type === 'auth';
   }
 
   private async handleAuth(socket: AuthenticatedSocket, msg: AuthMessage, ip: string) {
