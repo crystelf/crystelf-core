@@ -5,8 +5,8 @@ import logger from '../core/logger';
 import fs from 'fs/promises';
 
 class Persistence {
-  private static getUserDataPath(username: string): string {
-    return path.join(paths.get('userData'), username, 'data.json');
+  private static getUserDataPath(username: string, fileName: string): string {
+    return path.join(paths.get('userData'), username, `${fileName}.json`);
   }
 
   private static async ensureUserPath(username: string): Promise<void> {
@@ -18,9 +18,13 @@ class Persistence {
     }
   }
 
-  public static async writeDataLocal<T>(username: string, data: T): Promise<void> {
+  public static async writeDataLocal<T>(
+    username: string,
+    data: T,
+    fileName: string
+  ): Promise<void> {
     await this.ensureUserPath(username);
-    const filePath = this.getUserDataPath(username);
+    const filePath = this.getUserDataPath(username, fileName);
 
     try {
       await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8');
@@ -30,8 +34,8 @@ class Persistence {
     }
   }
 
-  public static async readDataLocal<T>(username: string): Promise<T | undefined> {
-    const filePath = this.getUserDataPath(username);
+  public static async readDataLocal<T>(username: string, fileName: string): Promise<T | undefined> {
+    const filePath = this.getUserDataPath(username, fileName);
 
     try {
       const data = await fs.readFile(filePath, 'utf-8');

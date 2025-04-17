@@ -83,6 +83,7 @@ class WSServer {
     } else {
       logger.warn(`Auth failed from ${ip} (invalid secret), clientId: ${msg.clientId}`);
       await WsTools.send(socket, { type: 'auth', success: false });
+      socket.close(4001, 'Authentication failed');
     }
   }
 
