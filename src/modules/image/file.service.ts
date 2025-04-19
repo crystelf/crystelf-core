@@ -3,20 +3,20 @@ import fs from 'fs';
 import paths from '../../utils/core/path';
 import logger from '../../utils/core/logger';
 
-class ImageService {
-  private readonly imagePath: string;
+class FileService {
+  private readonly filePath: string;
 
   constructor() {
-    this.imagePath = paths.get('images');
-    logger.info(`晶灵云图数据中心初始化..数据存储在: ${this.imagePath}`);
+    this.filePath = paths.get('files');
+    logger.info(`晶灵云图数据中心初始化..数据存储在: ${this.filePath}`);
   }
 
-  public async getImage(relativePath: string): Promise<string | null> {
+  public async getFile(relativePath: string): Promise<string | null> {
     if (!this.isValidPath(relativePath) && !this.isValidFilename(path.basename(relativePath))) {
       throw new Error('非法路径请求');
     }
 
-    const filePath = path.join(this.imagePath, relativePath);
+    const filePath = path.join(this.filePath, relativePath);
     logger.debug(`尝试访问图像路径: ${filePath}`);
 
     return fs.existsSync(filePath) ? filePath : null;
@@ -39,4 +39,4 @@ class ImageService {
   }
 }
 
-export default ImageService;
+export default FileService;

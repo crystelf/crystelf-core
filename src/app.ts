@@ -2,7 +2,7 @@ import express from 'express';
 import logger from './utils/core/logger';
 import paths from './utils/core/path';
 import sampleController from './modules/sample/sample.controller';
-import imageController from './modules/image/image.controller';
+import imageController from './modules/image/file.controller';
 import config from './utils/core/config';
 import './services/ws/wsServer';
 
@@ -20,7 +20,7 @@ const apps = {
 
     const modules = [
       { path: '/api/sample', name: '测试模块', controller: sampleController },
-      { path: '/images', name: '图像模块', controller: imageController },
+      { path: '/files', name: '文件模块', controller: imageController },
     ];
 
     modules.forEach((module) => {

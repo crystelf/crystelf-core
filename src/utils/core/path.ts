@@ -29,11 +29,13 @@ class PathManager {
     const mappings: Record<PathType, string> = {
       root: this.baseDir,
       public: path.join(this.baseDir, 'public'),
-      images: path.join(this.baseDir, 'public/images'),
+      images: path.join(this.baseDir, 'public/files/image'),
       log: path.join(this.baseDir, 'logs'),
       config: path.join(this.baseDir, 'config'),
       temp: path.join(this.baseDir, 'temp'),
       userData: path.join(this.baseDir, 'private/data'),
+      files: path.join(this.baseDir, 'public/files'),
+      media: path.join(this.baseDir, 'public/files/media'),
     };
 
     return type ? mappings[type] : this.baseDir;
@@ -46,11 +48,13 @@ class PathManager {
     const logPath = this.get('log');
     const imagePath = this.get('images');
     const dataPath = this.get('userData');
+    const mediaPath = this.get('media');
     fc.createDir(logPath, false);
     fc.createDir(imagePath, false);
+    fc.createDir(mediaPath, false);
     fc.createDir(dataPath, false);
     logger.debug(`日志目录初始化: ${logPath}`);
-    logger.debug(`图像目录初始化: ${imagePath}`);
+    logger.debug(`图像目录初始化: ${imagePath};${mediaPath}`);
     logger.debug(`用户数据目录初始化: ${dataPath}`);
   }
 
@@ -74,7 +78,16 @@ class PathManager {
   }
 }
 
-type PathType = 'root' | 'public' | 'images' | 'log' | 'config' | 'temp' | 'userData';
+type PathType =
+  | 'root'
+  | 'public'
+  | 'images'
+  | 'log'
+  | 'config'
+  | 'temp'
+  | 'userData'
+  | 'files'
+  | 'media';
 
 const paths = PathManager.getInstance();
 export default paths;
