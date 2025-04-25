@@ -5,6 +5,7 @@ import sampleController from './modules/sample/sample.controller';
 import imageController from './modules/image/file.controller';
 import config from './utils/core/config';
 import './services/ws/wsServer';
+import compression from 'compression';
 
 const apps = {
   async createApp() {
@@ -12,6 +13,7 @@ const apps = {
 
     logger.info('晶灵核心初始化..');
     app.use(express.json());
+    app.use(compression());
     logger.debug('成功加载express.json()中间件');
 
     const publicPath = paths.get('public');
@@ -20,7 +22,7 @@ const apps = {
 
     const modules = [
       { path: '/api/sample', name: '测试模块', controller: sampleController },
-      { path: '/files', name: '文件模块', controller: imageController },
+      { path: '/public', name: '文件模块', controller: imageController },
     ];
 
     modules.forEach((module) => {
