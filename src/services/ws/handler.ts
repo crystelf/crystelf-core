@@ -12,6 +12,7 @@ class WSMessageHandler {
     this.handlers = new Map([
       ['test', this.handleTest],
       ['ping', this.handlePing],
+      ['pong', this.handlePong],
     ]);
   }
 
@@ -44,6 +45,10 @@ class WSMessageHandler {
   private async handlePing(socket: WebSocket, msg: any) {
     //logger.info(`ping`);
     await wsTools.send(socket, { type: 'pong' });
+  }
+
+  private async handlePong(socket: WebSocket, msg: any) {
+    logger.debug(`received pong ${msg.data}`);
   }
 
   private async handleUnknown(socket: WebSocket, msg: any) {
