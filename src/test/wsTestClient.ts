@@ -1,7 +1,7 @@
 import WebSocket from 'ws';
 import axios from 'axios';
 
-const WS_URL = 'ws://127.0.0.1:3001';
+const WS_URL = 'ws://127.0.0.1:4001';
 const WS_SECRET = '114514';
 const CLIENT_ID = 'test';
 
@@ -39,7 +39,7 @@ function createWebSocketClient() {
 
 async function testGetAPI() {
   try {
-    const response = await axios.get('http://localhost:3000/api/sample/hello');
+    const response = await axios.get('http://localhost:4000/api/sample/hello');
     console.log('[HTTP][GET] Response:', response.data);
   } catch (err) {
     console.error('[HTTP][GET] Error:', err);
@@ -48,9 +48,7 @@ async function testGetAPI() {
 
 async function testPostAPI() {
   try {
-    const response = await axios.post('http://localhost:3000/api/sample/greet', {
-      name: 'Jerry',
-    });
+    const response = await axios.post('http://localhost:4000/api/bot/getBotId', {});
     console.log('[HTTP][POST] Response:', response.data);
   } catch (err) {
     console.error('[HTTP][POST] Error:', err);

@@ -7,6 +7,7 @@ import config from './utils/core/config';
 import './services/ws/wsServer';
 import compression from 'compression';
 import testController from './modules/test/test.controller';
+import BotController from './modules/bot/bot.controller';
 
 const apps = {
   async createApp() {
@@ -25,6 +26,7 @@ const apps = {
       { path: '/api/sample', name: '测试模块', controller: sampleController },
       { path: '/public', name: '文件模块', controller: imageController },
       { path: '/test', name: '测试', controller: testController },
+      { path: '/api/bot', name: '寄气人模块', controller: BotController },
     ];
 
     modules.forEach((module) => {
