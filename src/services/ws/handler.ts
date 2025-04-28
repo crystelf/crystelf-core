@@ -63,7 +63,8 @@ class WSMessageHandler {
 
   private async handleReportBots(socket: WebSocket, msg: any) {
     logger.debug(`received reportBots: ${msg.data}`);
-    await redisService.persistData('crystelf', msg, 'bots');
+    const clientId = msg.data[0].client;
+    await redisService.persistData('crystelfBots', msg.data[1], clientId);
   }
 
   public registerHandler(type: string, handler: MessageHandler): void {
