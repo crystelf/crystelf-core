@@ -2,6 +2,7 @@ import { AuthenticatedSocket } from '../../types/ws';
 import wsTools from '../../utils/ws/wsTools';
 import { WebSocket } from 'ws';
 import logger from '../../utils/core/logger';
+import redisService from '../redis/redis';
 
 type MessageHandler = (socket: WebSocket, msg: any) => Promise<void>;
 
@@ -13,6 +14,7 @@ class WSMessageHandler {
       ['test', this.handleTest],
       ['ping', this.handlePing],
       ['pong', this.handlePong],
+      ['reportBots', this.handleReportBots],
     ]);
   }
 
@@ -48,7 +50,7 @@ class WSMessageHandler {
   }
 
   private async handlePong(socket: WebSocket, msg: any) {
-    logger.debug(`received pong ${msg.data}`);
+    logger.debug(`received pong`);
   }
 
   private async handleUnknown(socket: WebSocket, msg: any) {
@@ -57,6 +59,11 @@ class WSMessageHandler {
       type: 'error',
       message: `未知消息类型: ${msg.type}`,
     });
+  }
+
+  private async handleReportBots(socket: WebSocket, msg: any) {
+    logger.debug(`received reportBots: ${msg.data}`);
+    await redisService.persistData('crystelf', msg, 'bots');
   }
 
   public registerHandler(type: string, handler: MessageHandler): void {
