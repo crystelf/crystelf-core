@@ -181,9 +181,6 @@ class RedisService {
     return;
   }
 
-  /**
-   * 测试方法：示例性地获取一个用户数据
-   */
   public async test(): Promise<void> {
     const user = await this.fetch<IUser>('Jerry', 'IUser');
     logger.debug('User:', user);

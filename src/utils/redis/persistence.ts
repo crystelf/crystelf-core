@@ -5,26 +5,26 @@ import logger from '../core/logger';
 import fs from 'fs/promises';
 
 class Persistence {
-  private static getUserDataPath(username: string, fileName: string): string {
-    return path.join(paths.get('userData'), username, `${fileName}.json`);
+  private static getDataPath(dataName: string, fileName: string): string {
+    return path.join(paths.get('userData'), dataName, `${fileName}.json`);
   }
 
-  private static async ensureUserPath(username: string): Promise<void> {
-    const userPath = path.join(paths.get('userData'), username);
+  private static async ensureUserPath(dataName: string): Promise<void> {
+    const dataPath = path.join(paths.get('userData'), dataName);
     try {
-      await fc.createDir(userPath, false);
+      await fc.createDir(dataPath, false);
     } catch (err) {
       logger.error(err);
     }
   }
 
   public static async writeDataLocal<T>(
-    username: string,
+    dataName: string,
     data: T,
     fileName: string
   ): Promise<void> {
-    await this.ensureUserPath(username);
-    const filePath = this.getUserDataPath(username, fileName);
+    await this.ensureUserPath(dataName);
+    const filePath = this.getDataPath(dataName, fileName);
 
     try {
       await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8');
@@ -34,8 +34,8 @@ class Persistence {
     }
   }
 
-  public static async readDataLocal<T>(username: string, fileName: string): Promise<T | undefined> {
-    const filePath = this.getUserDataPath(username, fileName);
+  public static async readDataLocal<T>(dataName: string, fileName: string): Promise<T | undefined> {
+    const filePath = this.getDataPath(dataName, fileName);
 
     try {
       const data = await fs.readFile(filePath, 'utf-8');
