@@ -1,11 +1,14 @@
 ## 构建：
 - pnpm i
-- pnpm run build
-- pnpm run start
+- pnpm build
+- pnpm start
 
 ## 使用：
-- public/image/图片
+- public/files/image/图片 支持多级目录
+- public/files/media/视频 支持多级目录
 - logs/日志
+- src/modules/路由 支持post&get
+- .env 环境变量
 
 ## 贡献
 - fork到自己的储存库
