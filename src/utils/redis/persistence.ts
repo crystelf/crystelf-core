@@ -9,7 +9,12 @@ class Persistence {
     return path.join(paths.get('userData'), dataName, `${fileName}.json`);
   }
 
-  private static async ensureUserPath(dataName: string): Promise<void> {
+  /**
+   * 确保数据目录存在
+   * @param dataName
+   * @private
+   */
+  private static async ensureDataPath(dataName: string): Promise<void> {
     const dataPath = path.join(paths.get('userData'), dataName);
     try {
       await fc.createDir(dataPath, false);
@@ -18,12 +23,18 @@ class Persistence {
     }
   }
 
+  /**
+   * 将数据写入本地，以json格式存储
+   * @param dataName 目录名
+   * @param data 文件内容
+   * @param fileName 文件名
+   */
   public static async writeDataLocal<T>(
     dataName: string,
     data: T,
     fileName: string
   ): Promise<void> {
-    await this.ensureUserPath(dataName);
+    await this.ensureDataPath(dataName);
     const filePath = this.getDataPath(dataName, fileName);
 
     try {
@@ -34,6 +45,11 @@ class Persistence {
     }
   }
 
+  /**
+   * 从本地读取文件
+   * @param dataName 目录名
+   * @param fileName 文件名
+   */
   public static async readDataLocal<T>(dataName: string, fileName: string): Promise<T | undefined> {
     const filePath = this.getDataPath(dataName, fileName);
 

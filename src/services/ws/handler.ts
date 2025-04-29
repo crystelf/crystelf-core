@@ -21,7 +21,7 @@ class WSMessageHandler {
 
   async handle(socket: AuthenticatedSocket, clientId: string, msg: any) {
     try {
-      //检查是否是 pendingRequests 的回包
+      //如果是 pendingRequests 的回包
       if (msg.requestId && wsClientManager.resolvePendingRequest(msg.requestId, msg)) {
         return;
       }
