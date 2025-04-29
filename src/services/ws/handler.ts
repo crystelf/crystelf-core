@@ -3,6 +3,7 @@ import wsTools from '../../utils/ws/wsTools';
 import { WebSocket } from 'ws';
 import logger from '../../utils/core/logger';
 import redisService from '../redis/redis';
+import wsClientManager from './wsClientManager';
 
 type MessageHandler = (socket: WebSocket, msg: any) => Promise<void>;
 
@@ -20,6 +21,11 @@ class WSMessageHandler {
 
   async handle(socket: AuthenticatedSocket, clientId: string, msg: any) {
     try {
+      //检查是否是 pendingRequests 的回包
+      if (msg.requestId && wsClientManager.resolvePendingRequest(msg.requestId, msg)) {
+        return;
+      }
+
       const handler = this.handlers.get(msg.type);
 
       if (handler) {
@@ -37,7 +43,6 @@ class WSMessageHandler {
   }
 
   private async handleTest(socket: WebSocket, msg: any) {
-    //logger.info(`消息测试[test]`);
     await wsTools.send(socket, {
       type: 'test',
       data: { status: 'ok' },
@@ -45,7 +50,6 @@ class WSMessageHandler {
   }
 
   private async handlePing(socket: WebSocket, msg: any) {
-    //logger.info(`ping`);
     await wsTools.send(socket, { type: 'pong' });
   }
 
