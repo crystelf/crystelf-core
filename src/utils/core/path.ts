@@ -1,7 +1,6 @@
 import path from 'path';
 import fs from 'fs';
 import fc from './file';
-import logger from './logger';
 
 class PathManager {
   private static instance: PathManager;
@@ -45,6 +44,7 @@ class PathManager {
    * 初始化
    */
   public init(): void {
+    /*
     const logPath = this.get('log');
     const imagePath = this.get('images');
     const dataPath = this.get('userData');
@@ -56,25 +56,19 @@ class PathManager {
     logger.debug(`日志目录初始化: ${logPath}`);
     logger.debug(`图像目录初始化: ${imagePath};${mediaPath}`);
     logger.debug(`用户数据目录初始化: ${dataPath}`);
-  }
+     */
+    const pathsToInit = [
+      this.get('log'),
+      this.get('config'),
+      this.get('userData'),
+      this.get('media'),
+    ];
 
-  /**
-   * 解析相对路径（基于项目根目录）
-   * @param segments 路径片段
-   */
-  public resolve(...segments: string[]): string {
-    return path.join(this.baseDir, ...segments);
-  }
-
-  /**
-   * 检查路径是否存在（同步）
-   */
-  public existsSync(targetPath: string): boolean {
-    try {
-      return fs.existsSync(targetPath);
-    } catch {
-      return false;
-    }
+    pathsToInit.forEach((dirPath) => {
+      if (!fs.existsSync(dirPath)) {
+        fc.createDir(dirPath);
+      }
+    });
   }
 }
 

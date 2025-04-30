@@ -13,6 +13,7 @@ const apps = {
   async createApp() {
     const app = express();
 
+    paths.init();
     logger.info('晶灵核心初始化..');
     app.use(express.json());
     app.use(compression());
@@ -44,7 +45,6 @@ const apps = {
         });
       }
     });
-    paths.init();
     logger.info('晶灵核心初始化完毕！');
     return app;
   },
