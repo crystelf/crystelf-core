@@ -17,7 +17,7 @@ class FileService {
     }
 
     const filePath = path.join(this.filePath, relativePath);
-    logger.debug(`尝试访问图像路径: ${filePath}`);
+    logger.debug(`尝试访问文件路径: ${filePath}`);
 
     return fs.existsSync(filePath) ? filePath : null;
   }

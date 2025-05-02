@@ -35,6 +35,7 @@ class PathManager {
       userData: path.join(this.baseDir, 'private/data'),
       files: path.join(this.baseDir, 'public/files'),
       media: path.join(this.baseDir, 'public/files/media'),
+      package: path.join(this.baseDir, 'package.json'),
     };
 
     return type ? mappings[type] : this.baseDir;
@@ -81,6 +82,7 @@ type PathType =
   | 'temp'
   | 'userData'
   | 'files'
+  | 'package'
   | 'media';
 
 const paths = PathManager.getInstance();

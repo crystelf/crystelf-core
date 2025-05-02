@@ -1,6 +1,11 @@
 import simpleGit, { SimpleGit } from 'simple-git';
 import paths from './path';
 import logger from './logger';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+import fs from 'fs';
+
+const execAsync = promisify(exec);
 
 class AutoUpdater {
   private git: SimpleGit;
@@ -41,7 +46,10 @@ class AutoUpdater {
           return false;
         }
 
-        logger.info('更新成功！');
+        logger.info('代码更新成功，开始更新依赖..');
+        await this.updateDependencies();
+
+        logger.info('自动更新流程完成。');
         return true;
       } else {
         logger.info('远程仓库没有新变化..');
@@ -50,6 +58,30 @@ class AutoUpdater {
     } catch (error) {
       logger.error('检查仓库更新失败: ', error);
       return false;
+    }
+  }
+
+  /**
+   * 自动更新依赖和构建
+   */
+  private async updateDependencies(): Promise<void> {
+    try {
+      logger.info('执行 pnpm install...');
+      await execAsync('pnpm install', { cwd: this.repoPath });
+      logger.info('依赖安装完成。');
+
+      const pkgPath = paths.get('package');
+      const pkgJson = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+
+      if (pkgJson.scripts?.build) {
+        logger.info('检测到 build 脚本，执行 pnpm build...');
+        await execAsync('pnpm build', { cwd: this.repoPath });
+        logger.info('构建完成。');
+      } else {
+        logger.info('未检测到 build 脚本，跳过构建。');
+      }
+    } catch (error) {
+      logger.error('更新依赖或构建失败: ', error);
     }
   }
 }
