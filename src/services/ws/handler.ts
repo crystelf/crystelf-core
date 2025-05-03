@@ -54,7 +54,7 @@ class WSMessageHandler {
   }
 
   private async handlePong(socket: WebSocket, msg: any) {
-    logger.debug(`received pong`);
+    //logger.debug(`received pong`);
   }
 
   private async handleUnknown(socket: WebSocket, msg: any) {
