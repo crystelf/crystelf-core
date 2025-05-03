@@ -74,7 +74,8 @@ const apps = {
     //logger.info(duration);
     if (duration) {
       logger.warn(`重启完成！耗时 ${duration} 秒..`);
-      fs.writeFileSync('/temp/restart_time', duration.toString());
+      const restartTimePath = path.join(paths.get('temp'), 'restart_time');
+      fs.writeFileSync(restartTimePath, duration.toString());
     }
 
     logger.info('晶灵核心初始化完毕！');

@@ -3,6 +3,7 @@ import logger from './utils/core/logger';
 import config from './utils/core/config';
 import redis from './services/redis/redis';
 import autoUpdater from './utils/core/autoUpdater';
+import System from './utils/core/system';
 
 config.check(['PORT', 'DEBUG', 'RD_PORT', 'RD_ADD', 'WS_SECRET', 'WS_PORT']);
 const PORT = config.get('PORT') || 3000;
@@ -15,7 +16,8 @@ apps
     });
     const isUpdated = await autoUpdater.checkForUpdates();
     if (isUpdated) {
-      logger.warn(`检测到更新，请重启..`);
+      logger.warn(`检测到更新，正在重启..`);
+      await System.restart();
     }
   })
   .catch((err) => {

@@ -1,8 +1,8 @@
 import WebSocket from 'ws';
 import axios from 'axios';
 
-const WS_URL = 'ws://127.0.0.1:4001';
-const WS_SECRET = '114514';
+const WS_URL = 'ws://server.crystelf.top:4001';
+const WS_SECRET = '520520';
 const CLIENT_ID = 'test';
 
 function createWebSocketClient() {
@@ -48,8 +48,8 @@ async function testGetAPI() {
 
 async function testPostAPI() {
   try {
-    const response = await axios.post('http://localhost:4000/api/system/getRestartTime', {
-      token: 54188,
+    const response = await axios.post('https://core.crystelf.top/api/system/restart', {
+      token: 114113,
     });
     console.log('[HTTP][POST] Response:', response.data);
   } catch (err) {
@@ -61,7 +61,6 @@ async function main() {
   createWebSocketClient();
 
   setTimeout(() => {
-    testGetAPI();
     testPostAPI();
   }, 1000);
 }
