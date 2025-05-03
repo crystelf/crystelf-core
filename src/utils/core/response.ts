@@ -23,7 +23,12 @@ class response {
    * @param statusCode HTTP状态码，默认500
    * @param error 原始错误对象（开发环境显示）
    */
-  public static async error(res: Response, message: string, statusCode = 500, error?: any) {
+  public static async error(
+    res: Response,
+    message: string = '请求失败..',
+    statusCode = 500,
+    error?: any
+  ) {
     const response: Record<string, any> = {
       success: false,
       message,

@@ -1,7 +1,7 @@
 ## 构建：
 - pnpm i
 - pnpm build
-- pnpm start
+- bash start.sh
 
 ## 使用：
 - public/files/image/图片 支持多级目录

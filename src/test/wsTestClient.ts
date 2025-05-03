@@ -48,7 +48,9 @@ async function testGetAPI() {
 
 async function testPostAPI() {
   try {
-    const response = await axios.post('http://localhost:4000/api/bot/getBotId', { token: 54188 });
+    const response = await axios.post('http://localhost:4000/api/system/getRestartTime', {
+      token: 54188,
+    });
     console.log('[HTTP][POST] Response:', response.data);
   } catch (err) {
     console.error('[HTTP][POST] Error:', err);

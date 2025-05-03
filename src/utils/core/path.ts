@@ -36,6 +36,7 @@ class PathManager {
       files: path.join(this.baseDir, 'public/files'),
       media: path.join(this.baseDir, 'public/files/media'),
       package: path.join(this.baseDir, 'package.json'),
+      modules: path.join(this.baseDir, 'src/modules'),
     };
 
     return type ? mappings[type] : this.baseDir;
@@ -63,6 +64,7 @@ class PathManager {
       this.get('config'),
       this.get('userData'),
       this.get('media'),
+      this.get('temp'),
     ];
 
     pathsToInit.forEach((dirPath) => {
@@ -83,7 +85,8 @@ type PathType =
   | 'userData'
   | 'files'
   | 'package'
-  | 'media';
+  | 'media'
+  | 'modules';
 
 const paths = PathManager.getInstance();
 export default paths;

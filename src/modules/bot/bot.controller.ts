@@ -1,7 +1,7 @@
 import express from 'express';
 import response from '../../utils/core/response';
 import BotService from './bot.service';
-import Config from '../../utils/core/config';
+import tools from '../../utils/modules/tools';
 
 class BotController {
   private readonly router: express.Router;
@@ -19,19 +19,19 @@ class BotController {
     this.router.post(`/getBotId`, this.postBotsId);
   }
 
+  /**
+   * 获取当前连接到核心的全部botId数组
+   * @param req
+   * @param res
+   */
   private postBotsId = async (req: express.Request, res: express.Response): Promise<void> => {
     try {
       const token = req.body.token;
-      if (token.toString() === Config.get('TOKEN').toString()) {
+      if (tools.checkToken(token.toString())) {
         const result = await BotService.getBotId();
         await response.success(res, result);
       } else {
-        await response.error(
-          res,
-          'token验证失败..',
-          404,
-          `有个小可爱使用了错误的token:${JSON.stringify(token)}`
-        );
+        await tools.tokenCheckFailed(res, token);
       }
     } catch (err) {
       await response.error(res, `请求失败..`, 500, err);

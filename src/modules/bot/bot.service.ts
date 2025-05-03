@@ -5,6 +5,9 @@ import path from 'path';
 import redisService from '../../services/redis/redis';
 
 class BotService {
+  /**
+   * 获取botId数组
+   */
   public async getBotId() {
     logger.debug('GetBotId..');
     const userPath = paths.get('userData');

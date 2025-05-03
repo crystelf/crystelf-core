@@ -1,50 +1,82 @@
 import express from 'express';
+import compression from 'compression';
+import fs from 'fs';
+import path from 'path';
 import logger from './utils/core/logger';
 import paths from './utils/core/path';
-import sampleController from './modules/sample/sample.controller';
-import imageController from './modules/image/file.controller';
 import config from './utils/core/config';
 import './services/ws/wsServer';
-import compression from 'compression';
-import testController from './modules/test/test.controller';
-import BotController from './modules/bot/bot.controller';
+import System from './utils/core/system';
 
 const apps = {
   async createApp() {
     const app = express();
-
     paths.init();
     logger.info('晶灵核心初始化..');
+
     app.use(express.json());
     app.use(compression());
-    logger.debug('成功加载express.json()中间件');
+    logger.debug('成功加载 express.json() 中间件');
 
     const publicPath = paths.get('public');
     app.use('/public', express.static(publicPath));
-    logger.debug(`静态资源路由挂载:/public => ${publicPath}`);
+    logger.debug(`静态资源路由挂载: /public => ${publicPath}`);
 
-    const modules = [
-      { path: '/api/sample', name: '测试模块', controller: sampleController },
-      { path: '/public', name: '文件模块', controller: imageController },
-      { path: '/api/test', name: '测试', controller: testController },
-      { path: '/api/bot', name: '寄气人模块', controller: BotController },
-    ];
+    const modulesDir = path.resolve(__dirname, './modules');
+    const controllerPattern = /\.controller\.[jt]s$/;
 
-    modules.forEach((module) => {
-      app.use(module.path, module.controller.getRouter());
-      logger.debug(`模块路由挂载: ${module.path.padEnd(12)} => ${module.name}`);
+    if (!fs.existsSync(modulesDir)) {
+      logger.warn(`未找到模块目录: ${modulesDir}`);
+    } else {
+      const moduleFolders = fs.readdirSync(modulesDir).filter((folder) => {
+        const fullPath = path.join(modulesDir, folder);
+        return fs.statSync(fullPath).isDirectory();
+      });
 
-      if (config.get('DEBUG', false)) {
-        module.controller.getRouter().stack.forEach((layer) => {
-          if (layer.route) {
-            const methods = Object.keys(layer.route)
-              .map((m) => m.toUpperCase())
-              .join(',');
-            logger.debug(`  ↳ ${methods.padEnd(6)} ${module.path}${layer.route.path}`);
+      for (const folder of moduleFolders) {
+        const folderPath = path.join(modulesDir, folder);
+        const files = fs.readdirSync(folderPath).filter((f) => controllerPattern.test(f));
+
+        for (const file of files) {
+          const filePath = path.join(folderPath, file);
+
+          try {
+            //logger.debug(`尝试加载模块: ${moduleUrl}`);
+            const controllerModule = require(filePath);
+            const controller = controllerModule.default;
+
+            if (controller?.getRouter) {
+              const routePath = `/api/${folder}`;
+              app.use(routePath, controller.getRouter());
+              logger.debug(`模块路由挂载: ${routePath.padEnd(12)} => ${file}`);
+
+              if (config.get('DEBUG', false)) {
+                controller.getRouter().stack.forEach((layer: any) => {
+                  if (layer.route) {
+                    const methods = Object.keys(layer.route.methods || {})
+                      .map((m) => m.toUpperCase())
+                      .join(',');
+                    logger.debug(`  ↳ ${methods.padEnd(6)} ${routePath}${layer.route.path}`);
+                  }
+                });
+              }
+            } else {
+              logger.warn(`模块 ${file} 没有导出 getRouter 方法，跳过..`);
+            }
+          } catch (err) {
+            logger.error(`模块 ${file} 加载失败:`, err);
           }
-        });
+        }
       }
-    });
+    }
+
+    const duration = System.checkRestartTime();
+    //logger.info(duration);
+    if (duration) {
+      logger.warn(`重启完成！耗时 ${duration} 秒..`);
+      fs.writeFileSync('/temp/restart_time', duration.toString());
+    }
+
     logger.info('晶灵核心初始化完毕！');
     return app;
   },
