@@ -26,7 +26,7 @@ const apps = {
     const modules = [
       { path: '/api/sample', name: '测试模块', controller: sampleController },
       { path: '/public', name: '文件模块', controller: imageController },
-      { path: '/test', name: '测试', controller: testController },
+      { path: '/api/test', name: '测试', controller: testController },
       { path: '/api/bot', name: '寄气人模块', controller: BotController },
     ];
 

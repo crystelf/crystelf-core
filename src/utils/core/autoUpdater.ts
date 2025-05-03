@@ -9,7 +9,7 @@ const execAsync = promisify(exec);
 
 class AutoUpdater {
   private git: SimpleGit;
-  private repoPath: string;
+  private readonly repoPath: string;
 
   constructor() {
     this.git = simpleGit();
