@@ -3,7 +3,7 @@ import logger from './logger';
 
 class ConfigManger {
   private static instance: ConfigManger;
-  private env: NodeJS.ProcessEnv;
+  private readonly env: NodeJS.ProcessEnv;
 
   private constructor() {
     dotenv.config();
