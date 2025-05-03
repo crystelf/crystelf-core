@@ -1,6 +1,8 @@
 import System from '../../utils/core/system';
 import fs from 'fs/promises';
 import logger from '../../utils/core/logger';
+import path from 'path';
+import paths from '../../utils/core/path';
 
 class SystemService {
   public async systemRestart() {
@@ -10,7 +12,8 @@ class SystemService {
 
   public async getRestartTime() {
     logger.debug(`有个小可爱想知道核心重启花了多久..`);
-    return await fs.readFile('/temp/restart_time', 'utf8');
+    const restartTimePath = path.join(paths.get('temp'), 'restart_time');
+    return await fs.readFile(restartTimePath, 'utf8');
   }
 }
 
