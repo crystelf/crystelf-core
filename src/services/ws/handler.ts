@@ -68,14 +68,9 @@ class WSMessageHandler {
   private async handleReportBots(socket: WebSocket, msg: any) {
     logger.debug(`received reportBots: ${msg.data}`);
     const clientId = msg.data[0].client;
-
     const botsData = msg.data.slice(1);
-
-    for (const bot of botsData) {
-      await redisService.persistData('crystelfBots', bot, clientId);
-    }
-
-    logger.debug(`已保存 ${botsData.length} 个 bot 数据 (client: ${clientId})`);
+    await redisService.persistData('crystelfBots', botsData, clientId);
+    logger.debug(`保存了 ${botsData.length} 个 bot（client: ${clientId}）`);
   }
 
   public registerHandler(type: string, handler: MessageHandler): void {
