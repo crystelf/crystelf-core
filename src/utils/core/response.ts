@@ -11,7 +11,7 @@ class response {
   public static async success(res: Response, data: any, statusCode = 200) {
     res.status(statusCode).json({
       success: true,
-      data,
+      data: data,
       timestamp: new Date().toISOString(),
     });
   }
@@ -31,7 +31,7 @@ class response {
   ) {
     const response: Record<string, any> = {
       success: false,
-      message,
+      data: message,
       timestamp: new Date().toISOString(),
     };
 
