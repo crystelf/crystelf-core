@@ -29,8 +29,8 @@ class SystemController {
     try {
       const token = req.body.token;
       if (tools.checkToken(token.toString())) {
-        await SystemService.systemRestart();
         await response.success(res, '核心正在重启..');
+        await SystemService.systemRestart();
       } else {
         await tools.tokenCheckFailed(res, token);
       }

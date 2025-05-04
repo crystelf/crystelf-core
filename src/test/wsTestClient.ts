@@ -48,7 +48,7 @@ async function testGetAPI() {
 
 async function testPostAPI() {
   try {
-    const response = await axios.post('https://core.crystelf.top/api/system/getRestartTime', {
+    const response = await axios.post('https://core.crystelf.top/api/system/restart', {
       token: 114113,
     });
     console.log('[HTTP][POST] Response:', response.data);
