@@ -3,6 +3,7 @@ import paths from '../../utils/core/path';
 import fs from 'fs/promises';
 import path from 'path';
 import redisService from '../../services/redis/redis';
+import wsClientManager from '../../services/ws/wsClientManager';
 
 class BotService {
   /**
@@ -44,6 +45,22 @@ class BotService {
     }
     logger.debug(uins);
     return uins;
+  }
+
+  public async getGroupInfo(data: { botId: string; groupId: string }) {
+    logger.debug('GetGroupInfo..');
+    let sendData = {
+      type: 'getGroupInfo',
+      data: data,
+    };
+    // TO DO 自动寻找botId对应的Client
+    const returnData = await wsClientManager.sendAndWait('test', sendData);
+    if (returnData) {
+      return returnData;
+    } else {
+      logger.warn(`未查询到${data.groupId}的信息..`);
+      return undefined;
+    }
   }
 }
 
