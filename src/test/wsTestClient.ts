@@ -1,8 +1,9 @@
 import WebSocket from 'ws';
 import axios from 'axios';
+import logger from '../utils/core/logger';
 
-const WS_URL = 'ws://server.crystelf.top:4001';
-const WS_SECRET = '520520';
+const WS_URL = 'ws://127.0.0.1:4001';
+const WS_SECRET = '114514';
 const CLIENT_ID = 'test';
 
 function createWebSocketClient() {
@@ -48,10 +49,10 @@ async function testGetAPI() {
 
 async function testPostAPI() {
   try {
-    const response = await axios.post('https://core.crystelf.top/api/system/restart', {
-      token: 114113,
+    const response = await axios.post('http://127.0.0.1:4000/api/bot/getBotId', {
+      token: 54188,
     });
-    console.log('[HTTP][POST] Response:', response.data);
+    logger.info('[HTTP][POST] Response:', response.data);
   } catch (err) {
     console.error('[HTTP][POST] Error:', err);
   }
