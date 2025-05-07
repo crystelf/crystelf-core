@@ -61,6 +61,8 @@ class BotController {
         if (returnData) {
           await response.success(res, returnData);
           logger.debug(returnData);
+        } else {
+          await response.error(res);
         }
       } else {
         await tools.tokenCheckFailed(res, token);

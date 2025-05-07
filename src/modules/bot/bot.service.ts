@@ -35,6 +35,7 @@ class BotService {
           continue;
         }
         botList.forEach((bot) => {
+          //logger.debug(bot);
           if (bot.uin && bot.nickName) {
             uins.push({ uin: bot.uin, nickName: bot.nickName });
           }
