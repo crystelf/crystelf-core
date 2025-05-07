@@ -18,7 +18,7 @@ class BotController {
 
   private init(): void {
     this.router.post(`/getBotId`, this.postBotsId);
-    this.router.post('/getBotInfo', this.postGroupInfo);
+    this.router.post('/getGroupInfo', this.postGroupInfo);
   }
 
   /**
@@ -56,7 +56,7 @@ class BotController {
     try {
       const token = req.body.token;
       if (tools.checkToken(token.toString())) {
-        const groupId = req.body.groupId;
+        const groupId = req.body.groupId.toString();
         let returnData = await BotService.getGroupInfo({ groupId: groupId });
         if (returnData) {
           await response.success(res, returnData);
