@@ -9,7 +9,7 @@ class BotService {
   /**
    * 获取botId数组
    */
-  public async getBotId() {
+  public async getBotId(): Promise<{ uin: string; nickName: string }[]> {
     logger.debug('GetBotId..');
     const userPath = paths.get('userData');
     const botsPath = path.join(userPath, '/crystelfBots');
@@ -47,13 +47,31 @@ class BotService {
     return uins;
   }
 
-  public async getGroupInfo(data: { botId: string; groupId: string }) {
+  /**
+   * 获取群聊消息
+   * @param data
+   */
+  public async getGroupInfo(data: {
+    botId?: string;
+    groupId: string;
+    clientId?: string;
+  }): Promise<any> {
     logger.debug('GetGroupInfo..');
+    const sendBot: string | undefined = data.botId
+      ? data.botId
+      : await this.getGroupBot(data.groupId);
+    if (!sendBot) {
+      logger.warn(`不存在能向群聊${data.groupId}发送消息的Bot!`);
+      return undefined;
+    }
     let sendData = {
       type: 'getGroupInfo',
-      data: data,
+      data: {
+        botId: sendBot,
+        groupId: data.groupId,
+        clientID: data.clientId ? data.clientId : await this.getBotClient(sendBot),
+      },
     };
-    // TO DO 自动寻找botId对应的Client
     const returnData = await wsClientManager.sendAndWait('test', sendData);
     if (returnData) {
       return returnData;
@@ -61,6 +79,67 @@ class BotService {
       logger.warn(`未查询到${data.groupId}的信息..`);
       return undefined;
     }
+  }
+
+  /**
+   * 获取`botId`对应的`client`
+   * @param botId
+   * @private
+   */
+  private async getBotClient(botId: string): Promise<string | undefined> {
+    const userPath = paths.get('userData');
+    const botsPath = path.join(userPath, '/crystelfBots');
+    const dirData = await fs.readdir(botsPath);
+    for (const clientId of dirData) {
+      if (!clientId.endsWith('.json')) continue;
+      try {
+        const raw:
+          | { uin: string; groups: { group_id: string; group_name: string }[]; nickName: string }[]
+          | undefined = await redisService.fetch('crystelfBots', clientId);
+        if (!raw) continue;
+
+        for (const bot of raw) {
+          if (bot.uin === botId) {
+            return clientId;
+          }
+        }
+      } catch (err) {
+        logger.error(`读取${clientId}出错..`);
+      }
+    }
+    return undefined;
+  }
+
+  /**
+   * 获取`groupId`对应的`botId`
+   * @param groupId
+   * @private
+   */
+  private async getGroupBot(groupId: string): Promise<string | undefined> {
+    const userPath = paths.get('userData');
+    const botsPath = path.join(userPath, '/crystelfBots');
+    const dirData = await fs.readdir(botsPath);
+    for (const clientId of dirData) {
+      if (!clientId.endsWith('.json')) continue;
+      try {
+        const raw:
+          | { uin: string; groups: { group_id: string; group_name: string }[]; nickName: string }[]
+          | undefined = await redisService.fetch('crystelfBots', clientId);
+        if (!raw) continue;
+        for (const bot of raw) {
+          if (bot.uin && bot.groups) {
+            for (const group of bot.groups) {
+              if (group.group_id === groupId) {
+                return bot.uin;
+              }
+            }
+          }
+        }
+      } catch (err) {
+        logger.error(`读取${clientId}出错..`);
+      }
+    }
+    return undefined;
   }
 }
 
