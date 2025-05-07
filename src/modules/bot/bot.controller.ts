@@ -45,8 +45,8 @@ class BotController {
    * @example req示例
    * ```json
    * {
-   * token: ‘114514’,
-   * groupId: ‘114514’
+   *  token: ‘114514’,
+   *  groupId: ‘114514’
    * }
    * ```
    * @param req

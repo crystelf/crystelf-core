@@ -34,11 +34,11 @@ class BotService {
           logger.warn(`解析 ${fileName} 出错: ${e}`);
           continue;
         }
-        for (const bot of botList) {
+        botList.forEach((bot) => {
           if (bot.uin && bot.nickName) {
             uins.push({ uin: bot.uin, nickName: bot.nickName });
           }
-        }
+        });
       } catch (err) {
         logger.error(`读取或解析 ${fileName} 出错: ${err}`);
       }
@@ -97,12 +97,7 @@ class BotService {
           | { uin: string; groups: { group_id: string; group_name: string }[]; nickName: string }[]
           | undefined = await redisService.fetch('crystelfBots', clientId);
         if (!raw) continue;
-
-        for (const bot of raw) {
-          if (bot.uin === botId) {
-            return clientId;
-          }
-        }
+        if (raw.find((bot) => bot.uin === botId)) return clientId;
       } catch (err) {
         logger.error(`读取${clientId}出错..`);
       }
@@ -126,15 +121,11 @@ class BotService {
           | { uin: string; groups: { group_id: string; group_name: string }[]; nickName: string }[]
           | undefined = await redisService.fetch('crystelfBots', clientId);
         if (!raw) continue;
-        for (const bot of raw) {
+        raw.forEach((bot) => {
           if (bot.uin && bot.groups) {
-            for (const group of bot.groups) {
-              if (group.group_id === groupId) {
-                return bot.uin;
-              }
-            }
+            if (bot.groups.find((group) => group.group_id === groupId)) return bot.uin;
           }
-        }
+        });
       } catch (err) {
         logger.error(`读取${clientId}出错..`);
       }
