@@ -49,8 +49,9 @@ async function testGetAPI() {
 
 async function testPostAPI() {
   try {
-    const response = await axios.post('http://127.0.0.1:4000/api/bot/getBotId', {
-      token: 54188,
+    const response = await axios.post('https://core.crystelf.top/api/bot/getGroupInfo', {
+      token: '阿弥诺斯',
+      groupId: '1042721418',
     });
     logger.info('[HTTP][POST] Response:', response.data);
   } catch (err) {
