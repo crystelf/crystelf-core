@@ -115,22 +115,27 @@ class BotService {
     const userPath = paths.get('userData');
     const botsPath = path.join(userPath, '/crystelfBots');
     const dirData = await fs.readdir(botsPath);
+
     for (const clientId of dirData) {
       if (!clientId.endsWith('.json')) continue;
+
       try {
         const raw:
           | { uin: number; groups: { group_id: number; group_name: string }[]; nickName: string }[]
           | undefined = await redisService.fetch('crystelfBots', clientId);
         if (!raw) continue;
-        raw.forEach((bot) => {
+
+        for (const bot of raw) {
           if (bot.uin && bot.groups) {
-            if (bot.groups.find((group) => group.group_id == groupId)) return bot.uin;
+            const found = bot.groups.find((group) => group.group_id == groupId);
+            if (found) return bot.uin;
           }
-        });
+        }
       } catch (err) {
         logger.error(`读取${clientId}出错..`);
       }
     }
+
     return undefined;
   }
 }
