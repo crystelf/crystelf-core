@@ -46,7 +46,7 @@ class BotController {
    * ```json
    * {
    *  token: ‘114514’,
-   *  groupId: ‘114514’
+   *  groupId: 114514
    * }
    * ```
    * @param req
@@ -56,7 +56,7 @@ class BotController {
     try {
       const token = req.body.token;
       if (tools.checkToken(token.toString())) {
-        const groupId = req.body.groupId.toString();
+        const groupId: number = req.body.groupId;
         let returnData = await BotService.getGroupInfo({ groupId: groupId });
         if (returnData) {
           await response.success(res, returnData);

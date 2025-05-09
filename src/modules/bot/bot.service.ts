@@ -9,12 +9,12 @@ class BotService {
   /**
    * 获取botId数组
    */
-  public async getBotId(): Promise<{ uin: string; nickName: string }[]> {
+  public async getBotId(): Promise<{ uin: number; nickName: string }[]> {
     logger.debug('GetBotId..');
     const userPath = paths.get('userData');
     const botsPath = path.join(userPath, '/crystelfBots');
     const dirData = await fs.readdir(botsPath);
-    const uins: { uin: string; nickName: string }[] = [];
+    const uins: { uin: number; nickName: string }[] = [];
 
     for (const fileName of dirData) {
       if (!fileName.endsWith('.json')) continue;
@@ -53,12 +53,12 @@ class BotService {
    * @param data
    */
   public async getGroupInfo(data: {
-    botId?: string;
-    groupId: string;
+    botId?: number;
+    groupId: number;
     clientId?: string;
   }): Promise<any> {
     logger.debug('GetGroupInfo..');
-    const sendBot: string | undefined = data.botId
+    const sendBot: number | undefined = data.botId
       ? data.botId
       : await this.getGroupBot(data.groupId);
     if (!sendBot) {
@@ -87,7 +87,7 @@ class BotService {
    * @param botId
    * @private
    */
-  private async getBotClient(botId: string): Promise<string | undefined> {
+  private async getBotClient(botId: number): Promise<string | undefined> {
     const userPath = paths.get('userData');
     const botsPath = path.join(userPath, '/crystelfBots');
     const dirData = await fs.readdir(botsPath);
@@ -95,7 +95,7 @@ class BotService {
       if (!clientId.endsWith('.json')) continue;
       try {
         const raw:
-          | { uin: string; groups: { group_id: string; group_name: string }[]; nickName: string }[]
+          | { uin: number; groups: { group_id: number; group_name: string }[]; nickName: string }[]
           | undefined = await redisService.fetch('crystelfBots', clientId);
         if (!raw) continue;
         if (raw.find((bot) => bot.uin == botId)) return clientId;
@@ -111,7 +111,7 @@ class BotService {
    * @param groupId
    * @private
    */
-  private async getGroupBot(groupId: string): Promise<string | undefined> {
+  private async getGroupBot(groupId: number): Promise<number | undefined> {
     const userPath = paths.get('userData');
     const botsPath = path.join(userPath, '/crystelfBots');
     const dirData = await fs.readdir(botsPath);
@@ -119,7 +119,7 @@ class BotService {
       if (!clientId.endsWith('.json')) continue;
       try {
         const raw:
-          | { uin: string; groups: { group_id: string; group_name: string }[]; nickName: string }[]
+          | { uin: number; groups: { group_id: number; group_name: string }[]; nickName: string }[]
           | undefined = await redisService.fetch('crystelfBots', clientId);
         if (!raw) continue;
         raw.forEach((bot) => {
