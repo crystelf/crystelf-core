@@ -73,13 +73,16 @@ class BotService {
         clientID: data.clientId ? data.clientId : await this.getBotClient(sendBot),
       },
     };
-    const returnData = await wsClientManager.sendAndWait('getGroupInfo', sendData);
-    if (returnData) {
-      return returnData;
-    } else {
-      logger.warn(`未查询到${data.groupId}的信息..`);
-      return undefined;
+    if (sendData.data.clientID) {
+      const returnData = await wsClientManager.sendAndWait(sendData.data.clientID, sendData);
+      if (returnData) {
+        return returnData;
+      } else {
+        logger.warn(`未查询到${data.groupId}的信息..`);
+        return undefined;
+      }
     }
+    return undefined;
   }
 
   /**
