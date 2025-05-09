@@ -73,7 +73,7 @@ class BotService {
         clientID: data.clientId ? data.clientId : await this.getBotClient(sendBot),
       },
     };
-    const returnData = await wsClientManager.sendAndWait('test', sendData);
+    const returnData = await wsClientManager.sendAndWait('getGroupInfo', sendData);
     if (returnData) {
       return returnData;
     } else {
