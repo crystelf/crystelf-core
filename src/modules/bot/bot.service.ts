@@ -124,7 +124,7 @@ class BotService {
         if (!raw) continue;
         raw.forEach((bot) => {
           if (bot.uin && bot.groups) {
-            if (bot.groups.find((group) => group.group_id === groupId)) return bot.uin;
+            if (bot.groups.find((group) => group.group_id == groupId)) return bot.uin;
           }
         });
       } catch (err) {
