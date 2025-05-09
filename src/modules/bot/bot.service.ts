@@ -74,7 +74,7 @@ class BotService {
       },
     };
     if (sendData.data.clientID) {
-      const returnData = await wsClientManager.sendAndWait(sendData.data.clientID, sendData);
+      const returnData = await wsClientManager.send(sendData.data.clientID, sendData);
       if (returnData) {
         return returnData;
       } else {
