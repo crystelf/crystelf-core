@@ -98,7 +98,7 @@ class BotService {
           | { uin: string; groups: { group_id: string; group_name: string }[]; nickName: string }[]
           | undefined = await redisService.fetch('crystelfBots', clientId);
         if (!raw) continue;
-        if (raw.find((bot) => bot.uin === botId)) return clientId;
+        if (raw.find((bot) => bot.uin == botId)) return clientId;
       } catch (err) {
         logger.error(`读取${clientId}出错..`);
       }
