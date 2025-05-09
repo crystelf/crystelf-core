@@ -73,7 +73,7 @@ class BotService {
         clientID: data.clientId ? data.clientId : await this.getBotClient(sendBot),
       },
     };
-    logger.debug(sendData);
+    //logger.debug(sendData);
     if (sendData.data.clientID) {
       const returnData = await wsClientManager.sendAndWait(sendData.data.clientID, sendData);
       if (returnData) {
@@ -102,7 +102,7 @@ class BotService {
           | { uin: number; groups: { group_id: number; group_name: string }[]; nickName: string }[]
           | undefined = await redisService.fetch('crystelfBots', clientId);
         if (!raw) continue;
-        if (raw.find((bot) => bot.uin == botId)) return clientId;
+        if (raw.find((bot) => bot.uin == botId)) return path.basename(clientId, '.json');
       } catch (err) {
         logger.error(`读取${clientId}出错..`);
       }
