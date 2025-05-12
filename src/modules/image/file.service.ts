@@ -53,6 +53,22 @@ class FileService {
   }
 
   /**
+   * 定时删除文件
+   * @param filePath 文件绝对路径
+   * @param timeoutMs 毫秒，默认10分钟
+   */
+  public async scheduleDelete(filePath: string, timeoutMs: number = 10 * 60 * 1000): Promise<void> {
+    setTimeout(async () => {
+      try {
+        await fs.unlink(filePath);
+        logger.info(`已自动删除文件: ${filePath}`);
+      } catch (err) {
+        logger.warn(`删除文件失败: ${filePath}`, err);
+      }
+    }, timeoutMs);
+  }
+
+  /**
    * 检查路径合法性
    * @param relativePath
    * @private

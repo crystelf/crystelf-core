@@ -54,21 +54,25 @@ class FileController {
   };
 
   /**
-   * 文件上传接口
-   * @example 示例请求
+   * 处理文件上传请求
+   * 客户端应以 `multipart/form-data` 格式上传文件，字段名为 `file`
+   * @example 示例请求（使用 axios 和 form-data）
    * ```js
    * const form = new FormData();
    * const fileStream = fs.createReadStream(filePath);
    * form.append('file', fileStream);
-   * const uploadUrl = `http://localhost:4000/upload?dir=${uploadDir}`;
+   * const uploadUrl = `http://localhost:4000/upload?dir=example&expire=600`;
    * const response = await axios.post(uploadUrl, form, {
-   *       headers: {
-   *         ...form.getHeaders(),
-   *       },
-   *       maxContentLength: Infinity,
-   *       maxBodyLength: Infinity,
-   *     });
+   *   headers: {
+   *     ...form.getHeaders(),
+   *   },
+   *   maxContentLength: Infinity,
+   *   maxBodyLength: Infinity,
+   * });
    * ```
+   *
+   * @queryParam dir 上传到的相对目录，默认根目录
+   * @queryParam expire 文件保留时间，默认 600 秒
    * @param req
    * @param res
    */
@@ -80,10 +84,12 @@ class FileController {
       }
 
       const uploadDir = req.query.dir?.toString() || '';
+      const deleteAfter = parseInt(req.query.expire as string) || 10 * 60;
       const { fullPath, relativePath } = await this.FileService.saveUploadedFile(
         req.file,
         uploadDir
       );
+      await this.FileService.scheduleDelete(fullPath, deleteAfter * 1000);
       await response.success(res, {
         message: '文件上传成功..',
         filePath: fullPath,
