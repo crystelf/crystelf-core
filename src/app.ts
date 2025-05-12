@@ -41,7 +41,7 @@ const apps = {
           const filePath = path.join(folderPath, file);
 
           try {
-            //logger.debug(`尝试加载模块: ${moduleUrl}`);
+            logger.debug(`尝试加载模块: ${filePath}`);
             const controllerModule = require(filePath);
             const controller = controllerModule.default;
 
