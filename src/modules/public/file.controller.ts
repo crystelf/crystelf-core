@@ -4,6 +4,7 @@ import logger from '../../utils/core/logger';
 import response from '../../utils/core/response';
 import paths from '../../utils/core/path';
 import multer from 'multer';
+import tools from '../../utils/modules/tools';
 
 const uploadDir = paths.get('uploads');
 const upload = multer({
@@ -78,23 +79,28 @@ class FileController {
    */
   private handleUploadFile = async (req: express.Request, res: express.Response): Promise<void> => {
     try {
-      if (!req.file) {
-        await response.error(res, `未检测到上传文件`, 400);
-        return;
-      }
+      const token = req.body.token;
+      if (tools.checkToken(token.toString())) {
+        if (!req.file) {
+          await response.error(res, `未检测到上传文件`, 400);
+          return;
+        }
 
-      const uploadDir = req.query.dir?.toString() || '';
-      const deleteAfter = parseInt(req.query.expire as string) || 10 * 60;
-      const { fullPath, relativePath } = await this.FileService.saveUploadedFile(
-        req.file,
-        uploadDir
-      );
-      await this.FileService.scheduleDelete(fullPath, deleteAfter * 1000);
-      await response.success(res, {
-        message: '文件上传成功..',
-        filePath: fullPath,
-        url: relativePath,
-      });
+        const uploadDir = req.query.dir?.toString() || '';
+        const deleteAfter = parseInt(req.query.expire as string) || 10 * 60;
+        const { fullPath, relativePath } = await this.FileService.saveUploadedFile(
+          req.file,
+          uploadDir
+        );
+        await this.FileService.scheduleDelete(fullPath, deleteAfter * 1000);
+        await response.success(res, {
+          message: '文件上传成功..',
+          filePath: fullPath,
+          url: relativePath,
+        });
+      } else {
+        await tools.tokenCheckFailed(res, token);
+      }
     } catch (e) {
       await response.error(res, `文件上传失败..`, 500);
       logger.error(e);
