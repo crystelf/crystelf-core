@@ -14,7 +14,14 @@ const apps = {
     paths.init();
     logger.info('晶灵核心初始化..');
 
-    app.use(express.json());
+    app.use((req, res, next) => {
+      const contentType = req.headers['content-type'] || '';
+      if (contentType.includes('multipart/form-data')) {
+        next();
+      } else {
+        express.json()(req, res, next);
+      }
+    });
     app.use(compression());
     logger.debug('成功加载 express.json() 中间件');
 
