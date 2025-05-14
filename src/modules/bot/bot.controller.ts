@@ -19,6 +19,7 @@ class BotController {
   private init(): void {
     this.router.post(`/getBotId`, this.postBotsId);
     this.router.post('/getGroupInfo', this.postGroupInfo);
+    this.router.post('/sendMessage', this.sendMessage);
   }
 
   /**
@@ -61,6 +62,31 @@ class BotController {
         if (returnData) {
           await response.success(res, returnData);
           logger.debug(returnData);
+        } else {
+          await response.error(res);
+        }
+      } else {
+        await tools.tokenCheckFailed(res, token);
+      }
+    } catch (e) {
+      await response.error(res);
+    }
+  };
+
+  /**
+   * 发送消息到群聊
+   * @param req
+   * @param res
+   */
+  private sendMessage = async (req: express.Request, res: express.Response): Promise<void> => {
+    try {
+      const token = req.body.token;
+      if (tools.checkToken(token.toString())) {
+        const groupId: number = req.body.groupId;
+        const message: string = req.body.message;
+        const flag: boolean = await BotService.sendMessage(groupId, message);
+        if (flag) {
+          await response.success(res, {});
         } else {
           await response.error(res);
         }

@@ -87,6 +87,38 @@ class BotService {
   }
 
   /**
+   * 发送消息到群聊
+   * @param groupId 群号
+   * @param message 消息
+   */
+  public async sendMessage(groupId: number, message: string): Promise<boolean> {
+    logger.debug('sendGroupMessage..');
+    const sendBot: number | undefined = await this.getGroupBot(groupId);
+    if (!sendBot) {
+      logger.warn(`不存在能向群聊${groupId}发送消息的Bot!`);
+      return false;
+    }
+    const client = await this.getBotClient(sendBot);
+    if (!client) {
+      logger.warn(`不存${sendBot}对应的client!`);
+      return false;
+    }
+    const sendData = {
+      type: 'sendMessage',
+      data: {
+        botId: sendBot,
+        groupId: groupId,
+        clientId: client,
+      },
+    };
+    if (client) {
+      await wsClientManager.send(sendData.data.clientId, sendData);
+      return true;
+    }
+    return false;
+  }
+
+  /**
    * 获取`botId`对应的`client`
    * @param botId
    * @private
