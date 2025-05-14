@@ -21,6 +21,14 @@ let tools = {
     }
     logger.error(lastError);
   },
+
+  getRandomItem<T>(list: T[]): T {
+    return list[Math.floor(Math.random() * list.length)];
+  },
+
+  getRandomDelay(min: number, max: number): number {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  },
 };
 
 export default tools;

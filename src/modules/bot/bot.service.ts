@@ -4,6 +4,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import redisService from '../../services/redis/redis';
 import wsClientManager from '../../services/ws/wsClientManager';
+import tools from '../../utils/core/tool';
 
 class BotService {
   /**
@@ -119,6 +120,59 @@ class BotService {
     return false;
   }
 
+  public async broadcastToAllGroups(message: string): Promise<void> {
+    const userPath = paths.get('userData');
+    const botsPath = path.join(userPath, '/crystelfBots');
+    const dirData = await fs.readdir(botsPath);
+    const groupMap: Map<number, { botId: number; clientId: string }[]> = new Map();
+
+    for (const fileName of dirData) {
+      if (!fileName.endsWith('.json')) continue;
+
+      const clientId = path.basename(fileName, '.json');
+      const botList = await redisService.fetch('crystelfBots', fileName);
+      if (!Array.isArray(botList)) continue;
+      for (const bot of botList) {
+        if (!bot.uin || !bot.groups) continue;
+        for (const group of bot.groups) {
+          if (!groupMap.has(group.group_id)) {
+            groupMap.set(group.group_id, []);
+          }
+          groupMap.get(group.group_id)?.push({ botId: bot.uin, clientId });
+        }
+      }
+    }
+
+    for (const [groupId, botEntries] of groupMap.entries()) {
+      const clientGroups = new Map<string, number[]>();
+      botEntries.forEach(({ botId, clientId }) => {
+        if (!clientGroups.has(clientId)) clientGroups.set(clientId, []);
+        clientGroups.get(clientId)!.push(botId);
+      });
+      const selectedClientId = tools.getRandomItem([...clientGroups.keys()]);
+      const botCandidates = clientGroups.get(selectedClientId)!;
+      const selectedBotId = tools.getRandomItem(botCandidates);
+      const delay = tools.getRandomDelay(30_000, 90_000);
+      setTimeout(() => {
+        const sendData = {
+          type: 'sendMessage',
+          data: {
+            botId: selectedBotId,
+            groupId,
+            clientId: selectedClientId,
+            message,
+          },
+        };
+        logger.info(
+          `[广播] 向群 ${groupId} 使用Bot ${selectedBotId}（客户端 ${selectedClientId}）发送消息，延迟 ${delay / 1000} 秒`
+        );
+        wsClientManager.send(selectedClientId, sendData).catch((e) => {
+          logger.error(`发送到群${groupId}失败:`, e);
+        });
+      }, delay);
+    }
+  }
+
   /**
    * 获取`botId`对应的`client`
    * @param botId
@@ -172,7 +226,6 @@ class BotService {
         logger.error(`读取${clientId}出错..`);
       }
     }
-
     return undefined;
   }
 }

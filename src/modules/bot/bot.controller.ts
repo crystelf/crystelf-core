@@ -3,6 +3,7 @@ import response from '../../utils/core/response';
 import BotService from './bot.service';
 import tools from '../../utils/modules/tools';
 import logger from '../../utils/core/logger';
+import wsClientManager from '../../services/ws/wsClientManager';
 
 class BotController {
   private readonly router: express.Router;
@@ -20,6 +21,7 @@ class BotController {
     this.router.post(`/getBotId`, this.postBotsId);
     this.router.post('/getGroupInfo', this.postGroupInfo);
     this.router.post('/sendMessage', this.sendMessage);
+    this.router.post('/reportBots', this.reportBots);
   }
 
   /**
@@ -65,6 +67,29 @@ class BotController {
         } else {
           await response.error(res);
         }
+      } else {
+        await tools.tokenCheckFailed(res, token);
+      }
+    } catch (e) {
+      await response.error(res);
+    }
+  };
+
+  /**
+   * 广播要求同步群聊信息和bot连接情况
+   * @param req
+   * @param res
+   */
+  private reportBots = async (req: express.Request, res: express.Response): Promise<void> => {
+    try {
+      const token = req.body.token;
+      if (tools.checkToken(token.toString())) {
+        const sendMessage = {
+          type: 'reportBots',
+          data: {},
+        };
+        await wsClientManager.broadcast(sendMessage);
+        await response.success(res, {});
       } else {
         await tools.tokenCheckFailed(res, token);
       }
