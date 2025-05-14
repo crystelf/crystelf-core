@@ -86,6 +86,7 @@ class FileController {
           return;
         }
 
+        logger.debug(`检测到上传文件..`);
         const uploadDir = req.query.dir?.toString() || '';
         const deleteAfter = parseInt(req.query.expire as string) || 10 * 60;
         const { fullPath, relativePath } = await this.FileService.saveUploadedFile(
