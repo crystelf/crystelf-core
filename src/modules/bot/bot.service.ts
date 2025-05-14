@@ -109,6 +109,7 @@ class BotService {
         botId: sendBot,
         groupId: groupId,
         clientId: client,
+        message: message,
       },
     };
     if (client) {
