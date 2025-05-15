@@ -102,7 +102,7 @@ class BotController {
   };
 
   /**
-   * 发送消息到群聊
+   * 发送消息到群聊,自动获取client
    * @param req
    * @param res
    */
