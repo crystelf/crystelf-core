@@ -29,7 +29,7 @@ class ConfigManger {
     const value = this.env[key];
     if (value === undefined) {
       if (defaultValue !== undefined) return defaultValue;
-      logger.warn(`环境变量${key}未定义！`);
+      logger.fatal(1, `环境变量${key}未定义！`);
       return undefined as T;
     }
 
