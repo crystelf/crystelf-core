@@ -22,6 +22,7 @@ class BotController {
     this.router.post('/getGroupInfo', this.postGroupInfo);
     this.router.post('/sendMessage', this.sendMessage);
     this.router.post('/reportBots', this.reportBots);
+    this.router.post('/broadcast', this.smartBroadcast);
   }
 
   /**
@@ -80,6 +81,7 @@ class BotController {
    * @param req
    * @param res
    */
+  // TODO 测试接口可用性
   private reportBots = async (req: express.Request, res: express.Response): Promise<void> => {
     try {
       const token = req.body.token;
@@ -88,8 +90,9 @@ class BotController {
           type: 'reportBots',
           data: {},
         };
-        await wsClientManager.broadcast(sendMessage);
+        logger.info(`正在请求同步bot数据..`);
         await response.success(res, {});
+        await wsClientManager.broadcast(sendMessage);
       } else {
         await tools.tokenCheckFailed(res, token);
       }
@@ -103,6 +106,7 @@ class BotController {
    * @param req
    * @param res
    */
+  // TODO 测试接口可用性
   private sendMessage = async (req: express.Request, res: express.Response): Promise<void> => {
     try {
       const token = req.body.token;
@@ -115,6 +119,31 @@ class BotController {
         } else {
           await response.error(res);
         }
+      } else {
+        await tools.tokenCheckFailed(res, token);
+      }
+    } catch (e) {
+      await response.error(res);
+    }
+  };
+
+  /**
+   * 智能广播消息到全部群聊
+   * @param req
+   * @param res
+   */
+  // TODO 测试接口可用性
+  private smartBroadcast = async (req: express.Request, res: express.Response): Promise<void> => {
+    try {
+      const token = req.body.token;
+      const message = req.body.message;
+      if (!message || typeof message !== 'string') {
+        return await response.error(res, '缺少 message 字段', 400);
+      }
+      if (tools.checkToken(token.toString())) {
+        logger.info(`广播任务已开始，正在后台异步执行`);
+        await response.success(res, {});
+        await BotService.broadcastToAllGroups(message);
       } else {
         await tools.tokenCheckFailed(res, token);
       }

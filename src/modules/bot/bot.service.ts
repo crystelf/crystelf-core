@@ -120,6 +120,11 @@ class BotService {
     return false;
   }
 
+  /**
+   * 智能投放广播消息实现
+   * @param message 要广播的消息
+   */
+  // TODO 添加群聊信誉分机制，低于30分的群聊不播报等..
   public async broadcastToAllGroups(message: string): Promise<void> {
     const userPath = paths.get('userData');
     const botsPath = path.join(userPath, '/crystelfBots');
