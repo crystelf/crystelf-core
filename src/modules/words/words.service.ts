@@ -5,6 +5,17 @@ import logger from '../../utils/core/logger';
 
 class WordsService {
   private wordCache: Record<string, string[]> = {}; //缓存
+  private readonly clearIntervalMs = 30 * 60 * 1000; //30min
+
+  constructor() {
+    this.startAutoClear();
+  }
+  private startAutoClear() {
+    setInterval(() => {
+      logger.info('[WordsService] Clearing wordCache..');
+      this.wordCache = {};
+    }, this.clearIntervalMs);
+  }
 
   /**
    * 从本地加载json到内存&返回
