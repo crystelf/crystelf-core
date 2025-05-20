@@ -93,7 +93,7 @@ class BotService {
    * @param message 消息
    */
   public async sendMessage(groupId: number, message: string): Promise<boolean> {
-    logger.debug('sendGroupMessage..');
+    logger.info(`发送${message}到${groupId}..`);
     const sendBot: number | undefined = await this.getGroupBot(groupId);
     if (!sendBot) {
       logger.warn(`不存在能向群聊${groupId}发送消息的Bot!`);
