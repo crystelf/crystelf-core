@@ -141,8 +141,8 @@ class BotController {
         return await response.error(res, '缺少 message 字段', 400);
       }
       if (tools.checkToken(token.toString())) {
-        logger.info(`广播任务已开始，正在后台异步执行`);
-        await response.success(res, {});
+        logger.info(`广播任务已开始，正在后台执行..`);
+        await response.success(res, '广播任务已开始，正在后台执行..');
         await BotService.broadcastToAllGroups(message);
       } else {
         await tools.tokenCheckFailed(res, token);
