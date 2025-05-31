@@ -149,32 +149,39 @@ class BotService {
     }
 
     for (const [groupId, botEntries] of groupMap.entries()) {
+      logger.debug(`[群 ${groupId}] 候选Bot列表: ${JSON.stringify(botEntries)}`);
       const clientGroups = new Map<string, number[]>();
       botEntries.forEach(({ botId, clientId }) => {
         if (!clientGroups.has(clientId)) clientGroups.set(clientId, []);
         clientGroups.get(clientId)!.push(botId);
       });
       const selectedClientId = tools.getRandomItem([...clientGroups.keys()]);
+      logger.debug(`[群 ${groupId}] 随机选中 Client: ${selectedClientId}`);
       const botCandidates = clientGroups.get(selectedClientId)!;
+      logger.debug(`[群 ${groupId}] 该 Client 下候选 Bot: ${botCandidates}`);
       const selectedBotId = tools.getRandomItem(botCandidates);
-      const delay = tools.getRandomDelay(30_000, 90_000);
-      setTimeout(() => {
-        const sendData = {
-          type: 'sendMessage',
-          data: {
-            botId: selectedBotId,
-            groupId,
-            clientId: selectedClientId,
-            message,
-          },
-        };
-        logger.info(
-          `[广播] 向群 ${groupId} 使用Bot ${selectedBotId}（客户端 ${selectedClientId}）发送消息，延迟 ${delay / 1000} 秒`
-        );
-        wsClientManager.send(selectedClientId, sendData).catch((e) => {
-          logger.error(`发送到群${groupId}失败:`, e);
-        });
-      }, delay);
+      logger.debug(`[群 ${groupId}] 最终选中 Bot: ${selectedBotId}`);
+      const delay = tools.getRandomDelay(10_000, 150_000);
+      //解决闭包导致的变量覆盖问题
+      ((groupId, selectedClientId, selectedBotId, delay) => {
+        setTimeout(() => {
+          const sendData = {
+            type: 'sendMessage',
+            data: {
+              botId: selectedBotId,
+              groupId: groupId,
+              clientId: selectedClientId,
+              message: message,
+            },
+          };
+          logger.info(
+            `[广播] 向群 ${groupId} 使用Bot ${selectedBotId}（客户端 ${selectedClientId}）发送消息${message}，延迟 ${delay / 1000} 秒`
+          );
+          wsClientManager.send(selectedClientId, sendData).catch((e) => {
+            logger.error(`发送到群${groupId}失败:`, e);
+          });
+        }, delay);
+      })(groupId, selectedClientId, selectedBotId, delay);
     }
   }
 
