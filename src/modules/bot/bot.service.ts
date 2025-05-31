@@ -21,26 +21,16 @@ class BotService {
       if (!fileName.endsWith('.json')) continue;
 
       try {
-        const raw: [] | undefined = await redisService.fetch('crystelfBots', fileName);
-        if (!raw) continue;
+        const raw = await redisService.fetch('crystelfBots', fileName);
+        if (!raw || !Array.isArray(raw)) continue;
 
-        let botList: any[];
-        try {
-          botList = raw;
-          if (!Array.isArray(botList)) {
-            logger.warn(`${fileName}不是数组，已跳过`);
-            continue;
+        for (const bot of raw) {
+          const uin = Number(bot.uin);
+          const nickName = bot.nickName || '';
+          if (!isNaN(uin)) {
+            uins.push({ uin, nickName });
           }
-        } catch (e) {
-          logger.warn(`解析 ${fileName} 出错: ${e}`);
-          continue;
         }
-        botList.forEach((bot) => {
-          //logger.debug(bot);
-          if (bot.uin) {
-            uins.push({ uin: bot.uin, nickName: bot.nickName });
-          }
-        });
       } catch (err) {
         logger.error(`读取或解析 ${fileName} 出错: ${err}`);
       }
@@ -50,7 +40,7 @@ class BotService {
   }
 
   /**
-   * 获取群聊消息
+   * 获取群聊信息
    * @param data
    */
   public async getGroupInfo(data: {
@@ -59,30 +49,24 @@ class BotService {
     clientId?: string;
   }): Promise<any> {
     logger.debug('GetGroupInfo..');
-    const sendBot: number | undefined = data.botId
-      ? data.botId
-      : await this.getGroupBot(data.groupId);
+    const sendBot: number | undefined = data.botId ?? (await this.getGroupBot(data.groupId));
     if (!sendBot) {
       logger.warn(`不存在能向群聊${data.groupId}发送消息的Bot!`);
       return undefined;
     }
-    let sendData = {
+
+    const sendData = {
       type: 'getGroupInfo',
       data: {
         botId: sendBot,
         groupId: data.groupId,
-        clientID: data.clientId ? data.clientId : await this.getBotClient(sendBot),
+        clientID: data.clientId ?? (await this.getBotClient(sendBot)),
       },
     };
-    //logger.debug(sendData);
+
     if (sendData.data.clientID) {
       const returnData = await wsClientManager.sendAndWait(sendData.data.clientID, sendData);
-      if (returnData) {
-        return returnData;
-      } else {
-        logger.warn(`未查询到${data.groupId}的信息..`);
-        return undefined;
-      }
+      return returnData ?? undefined;
     }
     return undefined;
   }
@@ -94,14 +78,14 @@ class BotService {
    */
   public async sendMessage(groupId: number, message: string): Promise<boolean> {
     logger.info(`发送${message}到${groupId}..`);
-    const sendBot: number | undefined = await this.getGroupBot(groupId);
+    const sendBot = await this.getGroupBot(groupId);
     if (!sendBot) {
       logger.warn(`不存在能向群聊${groupId}发送消息的Bot!`);
       return false;
     }
     const client = await this.getBotClient(sendBot);
     if (!client) {
-      logger.warn(`不存${sendBot}对应的client!`);
+      logger.warn(`不存在${sendBot}对应的client!`);
       return false;
     }
     const sendData = {
@@ -113,11 +97,8 @@ class BotService {
         message: message,
       },
     };
-    if (client) {
-      await wsClientManager.send(sendData.data.clientId, sendData);
-      return true;
-    }
-    return false;
+    await wsClientManager.send(client, sendData);
+    return true;
   }
 
   /**
@@ -137,35 +118,40 @@ class BotService {
       const clientId = path.basename(fileName, '.json');
       const botList = await redisService.fetch('crystelfBots', fileName);
       if (!Array.isArray(botList)) continue;
-      if (!botList[0]) continue;
+
       for (const bot of botList) {
-        if (!bot.uin || !bot.groups) continue;
-        if (typeof bot.uin != 'number' || typeof bot.groups != 'number') continue;
-        logger.debug(JSON.stringify(bot));
-        for (const group of bot.groups) {
-          if (!groupMap.has(group.group_id)) {
-            groupMap.set(group.group_id, []);
+        const botId = Number(bot.uin);
+        const groups = bot.groups;
+
+        if (!botId || !Array.isArray(groups)) continue;
+
+        for (const group of groups) {
+          if (group.group_id === '未知') continue;
+          const groupId = Number(group.group_id);
+          if (isNaN(groupId)) continue;
+
+          if (!groupMap.has(groupId)) {
+            groupMap.set(groupId, []);
           }
-          groupMap.get(group.group_id)?.push({ botId: bot.uin, clientId });
+          groupMap.get(groupId)!.push({ botId, clientId });
         }
       }
     }
 
     for (const [groupId, botEntries] of groupMap.entries()) {
       logger.debug(`[群 ${groupId}] 候选Bot列表: ${JSON.stringify(botEntries)}`);
+
       const clientGroups = new Map<string, number[]>();
       botEntries.forEach(({ botId, clientId }) => {
         if (!clientGroups.has(clientId)) clientGroups.set(clientId, []);
         clientGroups.get(clientId)!.push(botId);
       });
+
       const selectedClientId = tools.getRandomItem([...clientGroups.keys()]);
-      logger.debug(`[群 ${groupId}] 随机选中 Client: ${selectedClientId}`);
       const botCandidates = clientGroups.get(selectedClientId)!;
-      logger.debug(`[群 ${groupId}] 该 Client 下候选 Bot: ${botCandidates}`);
       const selectedBotId = tools.getRandomItem(botCandidates);
-      logger.debug(`[群 ${groupId}] 最终选中 Bot: ${selectedBotId}`);
       const delay = tools.getRandomDelay(10_000, 150_000);
-      //解决闭包导致的变量覆盖问题
+
       ((groupId, selectedClientId, selectedBotId, delay) => {
         setTimeout(() => {
           const sendData = {
@@ -189,7 +175,7 @@ class BotService {
   }
 
   /**
-   * 获取`botId`对应的`client`
+   * 获取botId对应的client
    * @param botId
    * @private
    */
@@ -197,14 +183,20 @@ class BotService {
     const userPath = paths.get('userData');
     const botsPath = path.join(userPath, '/crystelfBots');
     const dirData = await fs.readdir(botsPath);
+
     for (const clientId of dirData) {
       if (!clientId.endsWith('.json')) continue;
+
       try {
-        const raw:
-          | { uin: number; groups: { group_id: number; group_name: string }[]; nickName: string }[]
-          | undefined = await redisService.fetch('crystelfBots', clientId);
-        if (!raw) continue;
-        if (raw.find((bot) => bot.uin == botId)) return path.basename(clientId, '.json');
+        const raw = await redisService.fetch('crystelfBots', clientId);
+        if (!Array.isArray(raw)) continue;
+
+        for (const bot of raw) {
+          const uin = Number(bot.uin);
+          if (!isNaN(uin) && uin === botId) {
+            return path.basename(clientId, '.json');
+          }
+        }
       } catch (err) {
         logger.error(`读取${clientId}出错..`);
       }
@@ -213,7 +205,7 @@ class BotService {
   }
 
   /**
-   * 获取`groupId`对应的`botId`
+   * 获取groupId对应的botId
    * @param groupId
    * @private
    */
@@ -226,15 +218,16 @@ class BotService {
       if (!clientId.endsWith('.json')) continue;
 
       try {
-        const raw:
-          | { uin: number; groups: { group_id: number; group_name: string }[]; nickName: string }[]
-          | undefined = await redisService.fetch('crystelfBots', clientId);
-        if (!raw) continue;
+        const raw = await redisService.fetch('crystelfBots', clientId);
+        if (!Array.isArray(raw)) continue;
 
         for (const bot of raw) {
-          if (bot.uin && bot.groups) {
-            const found = bot.groups.find((group) => group.group_id == groupId);
-            if (found) return bot.uin;
+          const uin = Number(bot.uin);
+          const groups = bot.groups;
+          if (!uin || !Array.isArray(groups)) continue;
+
+          if (groups.find((g) => Number(g.group_id) === groupId)) {
+            return uin;
           }
         }
       } catch (err) {
