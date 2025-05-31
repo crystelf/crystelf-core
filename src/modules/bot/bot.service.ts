@@ -137,8 +137,11 @@ class BotService {
       const clientId = path.basename(fileName, '.json');
       const botList = await redisService.fetch('crystelfBots', fileName);
       if (!Array.isArray(botList)) continue;
+      if (!botList[0]) continue;
       for (const bot of botList) {
         if (!bot.uin || !bot.groups) continue;
+        if (typeof bot.uin != 'number' || typeof bot.groups != 'number') continue;
+        logger.debug(JSON.stringify(bot));
         for (const group of bot.groups) {
           if (!groupMap.has(group.group_id)) {
             groupMap.set(group.group_id, []);
