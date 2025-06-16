@@ -111,11 +111,11 @@ class BotController {
     try {
       const token = req.body.token;
       if (tools.checkToken(token.toString())) {
-        const groupId: number = req.body.groupId;
-        const message: string = req.body.message;
+        const groupId: number = Number(req.body.groupId);
+        const message: string = req.body.message.toString();
         const flag: boolean = await BotService.sendMessage(groupId, message);
         if (flag) {
-          await response.success(res, {});
+          await response.success(res, { message: '消息发送成功..' });
         } else {
           await response.error(res);
         }
