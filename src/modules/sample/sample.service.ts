@@ -1,4 +1,4 @@
-import logger from '../../utils/core/logger';
+import logger from '../../core/utils/system/logger';
 
 class SampleService {
   public async getHello() {

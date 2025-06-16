@@ -1,6 +1,6 @@
 import express from 'express';
-import response from '../core/response';
-import Config from '../core/config';
+import response from '../system/response';
+import Config from '../system/config';
 
 let tools = {
   /**

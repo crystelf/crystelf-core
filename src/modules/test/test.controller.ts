@@ -1,7 +1,7 @@
 import express from 'express';
 import TestService from './test.service';
-import response from '../../utils/core/response';
-import logger from '../../utils/core/logger';
+import response from '../../core/utils/system/response';
+import logger from '../../core/utils/system/logger';
 
 class TestController {
   private readonly router: express.Router;

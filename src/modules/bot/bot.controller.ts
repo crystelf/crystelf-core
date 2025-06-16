@@ -1,9 +1,9 @@
 import express from 'express';
-import response from '../../utils/core/response';
+import response from '../../core/utils/system/response';
 import BotService from './bot.service';
-import tools from '../../utils/modules/tools';
-import logger from '../../utils/core/logger';
-import wsClientManager from '../../services/ws/wsClientManager';
+import tools from '../../core/utils/modules/tools';
+import logger from '../../core/utils/system/logger';
+import wsClientManager from '../../core/services/ws/wsClientManager';
 
 class BotController {
   private readonly router: express.Router;

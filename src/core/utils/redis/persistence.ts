@@ -1,7 +1,7 @@
 import path from 'path';
-import paths from '../core/path';
-import fc from '../core/file';
-import logger from '../core/logger';
+import paths from '../system/path';
+import fc from '../system/file';
+import logger from '../system/logger';
 import fs from 'fs/promises';
 
 class Persistence {

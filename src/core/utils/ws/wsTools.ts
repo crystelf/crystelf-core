@@ -1,5 +1,5 @@
 import WebSocket from 'ws';
-import logger from '../core/logger';
+import logger from '../system/logger';
 import { setInterval } from 'node:timers';
 
 class WsTools {

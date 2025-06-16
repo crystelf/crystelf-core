@@ -1,7 +1,7 @@
 import path from 'path';
-import paths from '../../utils/core/path';
+import paths from '../../core/utils/system/path';
 import fs from 'fs/promises';
-import logger from '../../utils/core/logger';
+import logger from '../../core/utils/system/logger';
 
 class WordsService {
   private wordCache: Record<string, string[]> = {}; //缓存

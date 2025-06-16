@@ -1,5 +1,5 @@
-import wsClientManager from '../../services/ws/wsClientManager';
-import logger from '../../utils/core/logger';
+import wsClientManager from '../../core/services/ws/wsClientManager';
+import logger from '../../core/utils/system/logger';
 
 class TestService {
   public async test() {

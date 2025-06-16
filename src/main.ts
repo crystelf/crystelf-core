@@ -1,9 +1,9 @@
-import apps from './app';
-import logger from './utils/core/logger';
-import config from './utils/core/config';
-import redis from './services/redis/redis';
-import autoUpdater from './utils/core/autoUpdater';
-import System from './utils/core/system';
+import apps from './core/app';
+import logger from './core/utils/system/logger';
+import config from './core/utils/system/config';
+import redis from './core/services/redis/redis';
+import autoUpdater from './core/utils/system/autoUpdater';
+import System from './core/utils/system/system';
 
 config.check(['PORT', 'DEBUG', 'RD_PORT', 'RD_ADD', 'WS_SECRET', 'WS_PORT']);
 const PORT = config.get('PORT') || 3000;

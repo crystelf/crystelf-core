@@ -1,4 +1,4 @@
-import logger from '../core/logger';
+import logger from '../system/logger';
 
 class redisTools {
   public static serialize<T>(data: T): string {

@@ -1,10 +1,10 @@
-import logger from '../../utils/core/logger';
-import paths from '../../utils/core/path';
+import logger from '../../core/utils/system/logger';
+import paths from '../../core/utils/system/path';
 import fs from 'fs/promises';
 import path from 'path';
-import redisService from '../../services/redis/redis';
-import wsClientManager from '../../services/ws/wsClientManager';
-import tools from '../../utils/core/tool';
+import redisService from '../../core/services/redis/redis';
+import wsClientManager from '../../core/services/ws/wsClientManager';
+import tools from '../../core/utils/system/tool';
 
 class BotService {
   /**

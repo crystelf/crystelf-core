@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs/promises';
-import paths from '../../utils/core/path';
-import logger from '../../utils/core/logger';
+import paths from '../../core/utils/system/path';
+import logger from '../../core/utils/system/logger';
 import { existsSync } from 'fs';
 
 class FileService {

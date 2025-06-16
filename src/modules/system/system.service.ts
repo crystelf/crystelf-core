@@ -1,8 +1,8 @@
-import System from '../../utils/core/system';
+import System from '../../core/utils/system/system';
 import fs from 'fs/promises';
-import logger from '../../utils/core/logger';
+import logger from '../../core/utils/system/logger';
 import path from 'path';
-import paths from '../../utils/core/path';
+import paths from '../../core/utils/system/path';
 
 class SystemService {
   public async systemRestart() {

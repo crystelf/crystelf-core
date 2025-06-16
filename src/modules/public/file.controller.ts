@@ -1,10 +1,10 @@
 import express from 'express';
 import FileService from './file.service';
-import logger from '../../utils/core/logger';
-import response from '../../utils/core/response';
-import paths from '../../utils/core/path';
+import logger from '../../core/utils/system/logger';
+import response from '../../core/utils/system/response';
+import paths from '../../core/utils/system/path';
 import multer from 'multer';
-import tools from '../../utils/modules/tools';
+import tools from '../../core/utils/modules/tools';
 
 const uploadDir = paths.get('uploads');
 const upload = multer({

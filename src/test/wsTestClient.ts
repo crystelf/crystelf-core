@@ -1,6 +1,6 @@
 import WebSocket from 'ws';
 import axios from 'axios';
-import logger from '../utils/core/logger';
+import logger from '../core/utils/system/logger';
 
 const WS_URL = 'ws://127.0.0.1:4001';
 const WS_SECRET = '114514';

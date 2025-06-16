@@ -1,6 +1,6 @@
 import express from 'express';
 import sampleService from './sample.service';
-import response from '../../utils/core/response';
+import response from '../../core/utils/system/response';
 
 class SampleController {
   private readonly router: express.Router;

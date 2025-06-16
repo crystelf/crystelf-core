@@ -1,7 +1,7 @@
 import express from 'express';
 import WordsService from './words.service';
-import response from '../../utils/core/response';
-import tools from '../../utils/modules/tools';
+import response from '../../core/utils/system/response';
+import tools from '../../core/utils/modules/tools';
 
 class WordsController {
   private readonly router: express.Router;

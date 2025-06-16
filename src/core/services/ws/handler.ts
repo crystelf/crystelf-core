@@ -1,7 +1,7 @@
 import { AuthenticatedSocket } from '../../types/ws';
 import wsTools from '../../utils/ws/wsTools';
 import { WebSocket } from 'ws';
-import logger from '../../utils/core/logger';
+import logger from '../../utils/system/logger';
 import redisService from '../redis/redis';
 import wsClientManager from './wsClientManager';
 

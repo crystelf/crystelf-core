@@ -2,11 +2,11 @@ import express from 'express';
 import compression from 'compression';
 import fs from 'fs';
 import path from 'path';
-import logger from './utils/core/logger';
-import paths from './utils/core/path';
-import config from './utils/core/config';
+import logger from './utils/system/logger';
+import paths from './utils/system/path';
+import config from './utils/system/config';
 import './services/ws/wsServer';
-import System from './utils/core/system';
+import System from './utils/system/system';
 
 const apps = {
   async createApp() {

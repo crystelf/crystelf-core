@@ -1,6 +1,6 @@
 import WebSocket, { WebSocketServer } from 'ws';
-import config from '../../utils/core/config';
-import logger from '../../utils/core/logger';
+import config from '../../utils/system/config';
+import logger from '../../utils/system/logger';
 import { AuthenticatedSocket, AuthMessage, WSMessage } from '../../types/ws';
 import WsTools from '../../utils/ws/wsTools';
 import wsHandler from './handler';
