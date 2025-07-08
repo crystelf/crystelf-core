@@ -1,0 +1,10 @@
+{
+  "name": "plugin-name",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "crystelf": {
+    "type": "plugin",
+    "dependencies": []
+  }
+}

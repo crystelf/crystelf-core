@@ -1,22 +1,33 @@
 import { Application } from 'express';
 import { Server } from 'http';
 
-interface Plugin {
+export default interface Plugin {
+  // 必须字段
   name: string;
   version: string;
+
+  // 可选描述
   description?: string;
-  // 初始化插件
+
+  // 依赖的核心服务 (如 ['logger', 'redis'])
+  dependencies?: string[];
+
+  // 初始化方法
   initialize?: (app: Application, server?: Server) => void | Promise<void>;
-  // 路由挂载点
+
+  // 路由注册方法
   routes?: (app: Application) => void;
+
   // 生命周期钩子
   onReady?: () => void | Promise<void>;
   onClose?: () => void | Promise<void>;
   onError?: (error: Error) => void;
-  // 自动更新相关
+
+  // 自动更新配置
   autoUpdateEnabled?: boolean;
   checkForUpdates?: () => Promise<boolean>;
   applyUpdate?: () => Promise<void>;
-}
 
-export default Plugin;
+  // 其他配置
+  [key: string]: any;
+}

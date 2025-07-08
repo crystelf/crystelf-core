@@ -3,9 +3,10 @@ import fs from 'fs/promises';
 import simpleGit, { SimpleGit } from 'simple-git';
 import { Application } from 'express';
 import { Server } from 'http';
-import Plugin from '../types/plugin';
+import Plugin from './../types/plugin';
 import logger from '../utils/system/logger';
 import paths from '../utils/system/path';
+import Core from './core';
 
 class PluginLoader {
   private readonly pluginsDir: string;
@@ -21,11 +22,13 @@ class PluginLoader {
 
   public async loadPlugins(): Promise<void> {
     try {
+      logger.info('正在加载插件..');
       const pluginFolders = await fs.readdir(this.pluginsDir);
 
       await Promise.all(
         pluginFolders.map(async (folder) => {
           const pluginPath = path.join(this.pluginsDir, folder);
+          logger.debug(`加载${folder}插件..`);
           const stat = await fs.stat(pluginPath);
 
           if (stat.isDirectory()) {
@@ -40,6 +43,11 @@ class PluginLoader {
     }
   }
 
+  /**
+   * 加载插件
+   * @param pluginPath
+   * @private
+   */
   private async loadPlugin(pluginPath: string): Promise<void> {
     try {
       const pluginName = path.basename(pluginPath);
@@ -63,6 +71,13 @@ class PluginLoader {
         return;
       }
 
+      try {
+        await this.checkDependencies(plugin);
+      } catch (err) {
+        logger.error(`插件依赖检查失败: ${plugin.name}`, err);
+        return;
+      }
+
       if (plugin.initialize) {
         await plugin.initialize(this.app, this.server);
       }
@@ -78,6 +93,11 @@ class PluginLoader {
     }
   }
 
+  /**
+   * 检查更新
+   * @param pluginPath
+   * @private
+   */
   private async checkPluginUpdates(pluginPath: string): Promise<boolean> {
     try {
       const git = simpleGit(pluginPath);
@@ -99,6 +119,11 @@ class PluginLoader {
     }
   }
 
+  /**
+   * 更新插件
+   * @param pluginPath
+   * @private
+   */
   private async updatePlugin(pluginPath: string): Promise<void> {
     try {
       const git = this.gitInstances.get(pluginPath);
@@ -116,6 +141,25 @@ class PluginLoader {
     }
   }
 
+  /**
+   * 检查依赖
+   * @param plugin
+   * @private
+   */
+  private async checkDependencies(plugin: Plugin): Promise<boolean> {
+    if (!plugin.dependencies) return true;
+
+    for (const dep of plugin.dependencies) {
+      if (!Core.hasService(dep)) {
+        throw new Error(`插件 ${plugin.name} 缺少依赖服务: ${dep}`);
+      }
+    }
+    return true;
+  }
+
+  /**
+   * 关闭插件
+   */
   public async closePlugins(): Promise<void> {
     await this.invokePluginHooks('onClose');
     this.loadedPlugins.clear();
