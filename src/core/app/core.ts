@@ -35,12 +35,25 @@ class Core {
   /**
    * 注册服务
    * @param name 服务名称
-   * @param service 服务
+   * @param service 服务实例
    */
   public static registerService(name: string, service: any): void {
-    Core.getInstance()._services.set(name, service);
+    const instance = Core.getInstance();
+    instance._services.set(name, service);
+
+    if (!(name in Core)) {
+      Object.defineProperty(Core, name, {
+        get: () => instance._services.get(name),
+        enumerable: true,
+        configurable: true,
+      });
+    }
   }
 
+  /**
+   * 获取实例
+   * @private
+   */
   private static getInstance(): Core {
     if (!Core._instance) {
       Core._instance = new Core();
@@ -54,6 +67,14 @@ class Core {
    */
   public static hasService(name: string): boolean {
     return Core.getInstance()._services.has(name);
+  }
+
+  /**
+   * 动态获取服务
+   * @param name 服务名称
+   */
+  public static getService<T = any>(name: string): T | undefined {
+    return Core.getInstance()._services.get(name);
   }
 }
 

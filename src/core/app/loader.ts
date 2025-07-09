@@ -147,12 +147,22 @@ class PluginLoader {
    * @private
    */
   private async checkDependencies(plugin: Plugin): Promise<boolean> {
-    if (!plugin.dependencies) return true;
-
+    if (!plugin.dependencies || plugin.dependencies.length === 0) {
+      return true;
+    }
+    const missingDeps: string[] = [];
     for (const dep of plugin.dependencies) {
-      if (!Core.hasService(dep)) {
-        throw new Error(`插件 ${plugin.name} 缺少依赖服务: ${dep}`);
+      try {
+        if (!Core.hasService(dep)) {
+          missingDeps.push(dep);
+        }
+      } catch (err) {
+        logger.warn(`检查依赖 ${dep} 时出错:`, err);
+        missingDeps.push(dep);
       }
+    }
+    if (missingDeps.length > 0) {
+      throw new Error(`插件 ${plugin.name} 缺少以下依赖服务: ${missingDeps.join(', ')}`);
     }
     return true;
   }
