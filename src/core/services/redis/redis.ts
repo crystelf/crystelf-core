@@ -41,8 +41,7 @@ class RedisService {
         }
       );
     } catch (error) {
-      logger.error('Redis连接失败:', error);
-      throw error;
+      logger.fatal(1, 'Redis连接失败:');
     }
   }
 

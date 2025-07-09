@@ -39,7 +39,7 @@ class PathManager {
       modules: path.join(this.baseDir, 'src/modules'),
       uploads: path.join(this.baseDir, 'public/files/uploads'),
       words: path.join(this.baseDir, 'private/data/word'),
-      plugins: path.join(this.baseDir, 'plugins'),
+      plugins: path.join(this.baseDir, 'src/plugins'),
     };
 
     return type ? mappings[type] : this.baseDir;

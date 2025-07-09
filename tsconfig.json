@@ -8,7 +8,10 @@
     "skipLibCheck": true,
     "outDir": "dist",
     "rootDir": ".",
+    "resolveJsonModule": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true
   },
-  "include": ["src/**/*", "src/plugins/**/*"],
+  "include": ["src","src/**/*", "plugins/**/*"],
   "exclude": ["node_modules"]
 }
