@@ -1,31 +1,26 @@
-import apps from './app';
-import logger from './utils/core/logger';
-import config from './utils/core/config';
-import redis from './services/redis/redis';
-import autoUpdater from './utils/core/autoUpdater';
-import System from './utils/core/system';
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { Logger } from '@nestjs/common';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { ResponseInterceptor } from './common/interceptors/response.interceptor';
+import { AllExceptionsFilter } from './common/filters/all-exception.filter';
 
-config.check(['PORT', 'DEBUG', 'RD_PORT', 'RD_ADD', 'WS_SECRET', 'WS_PORT']);
-const PORT = config.get('PORT') || 3000;
-
-apps
-  .createApp()
-  .then(async (app) => {
-    app.listen(PORT, () => {
-      logger.info(`Crystelf-core listening on ${PORT}`);
-    });
-    const isUpdated = await autoUpdater.checkForUpdates();
-    if (isUpdated) {
-      logger.warn(`检测到更新，正在重启..`);
-      await System.restart();
-    }
-  })
-  .catch((err) => {
-    logger.error('Crystelf-core启动失败:', err);
-    process.exit(1);
-  });
-
-process.on('SIGTERM', async () => {
-  await redis.disconnect();
-  process.exit(0);
+async function bootstrap() {
+  Logger.log('晶灵核心初始化..');
+  const app = await NestFactory.create(AppModule);
+  app.setGlobalPrefix('api');
+  app.useGlobalInterceptors(new ResponseInterceptor());
+  app.useGlobalFilters(new AllExceptionsFilter());
+  const config = new DocumentBuilder()
+    .setTitle('晶灵核心')
+    .setDescription('为晶灵提供API服务')
+    .setVersion('1.0')
+    .build();
+  const document = () => SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('', app, document);
+  await app.listen(7000);
+}
+bootstrap().then(() => {
+  Logger.log(`API服务已启动：http://localhost:7000`);
+  Logger.log(`API文档： http://localhost:7000/api`);
 });
