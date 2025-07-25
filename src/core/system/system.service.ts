@@ -2,6 +2,9 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import * as path from 'path';
 import * as fs from 'fs';
 import { PathService } from '../path/path.service';
+import { AutoUpdateModule } from '../auto-update/auto-update.module';
+import { AutoUpdateService } from '../auto-update/auto-update.service';
+import * as process from 'node:process';
 
 @Injectable()
 export class SystemService {
@@ -11,6 +14,8 @@ export class SystemService {
   constructor(
     @Inject(PathService)
     private readonly pathService: PathService,
+    @Inject(AutoUpdateService)
+    private readonly autoUpdateService: AutoUpdateService,
   ) {
     this.restartFile = path.join(
       this.pathService.get('temp'),
@@ -49,5 +54,13 @@ export class SystemService {
     this.logger.warn('服务即将重启..');
     await new Promise((resolve) => setTimeout(resolve, 300));
     process.exit(0);
+  }
+
+  async checkUpdate(): Promise<void> {
+    const updated = await this.autoUpdateService.checkForUpdates();
+    if (updated) {
+      this.logger.warn('系统代码已更新，正在重启..');
+      process.exit(1);
+    }
   }
 }

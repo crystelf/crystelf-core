@@ -25,6 +25,9 @@ async function bootstrap() {
   const document = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('', app, document);
   await app.listen(7000);
+  await systemService.checkUpdate().catch((err) => {
+    Logger.error(`自动更新失败: ${err?.message}`, '', 'System');
+  });
 }
 bootstrap().then(() => {
   Logger.log(`API服务已启动：http://localhost:7000`);
