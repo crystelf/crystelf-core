@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import * as path from 'path';
 import * as fs from 'fs';
-import { AppConfigService } from '../../config/config.service';
 import { Logger } from '@nestjs/common';
 
 @Injectable()
@@ -9,7 +8,7 @@ export class PathService {
   private readonly baseDir: string;
   private readonly logger = new Logger(PathService.name);
 
-  constructor(private readonly configService: AppConfigService) {
+  constructor() {
     this.baseDir = path.join(__dirname, '../../..');
     this.initializePaths();
   }

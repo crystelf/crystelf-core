@@ -4,6 +4,7 @@ import { Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { AllExceptionsFilter } from './common/filters/all-exception.filter';
+import { SystemService } from './core/system/system.service';
 
 async function bootstrap() {
   Logger.log('晶灵核心初始化..');
@@ -11,6 +12,11 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
   app.useGlobalInterceptors(new ResponseInterceptor());
   app.useGlobalFilters(new AllExceptionsFilter());
+  const systemService = app.get(SystemService);
+  const restartDuration = systemService.checkRestartTime();
+  if (restartDuration) {
+    new Logger('System').warn(`重启完成！耗时 ${restartDuration} 秒`);
+  }
   const config = new DocumentBuilder()
     .setTitle('晶灵核心')
     .setDescription('为晶灵提供API服务')
