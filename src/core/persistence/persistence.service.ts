@@ -28,6 +28,12 @@ export class PersistenceService {
     }
   }
 
+  /**
+   * 将数据保存到本地 带格式化
+   * @param dataName 数据名 -> 文件夹名
+   * @param data 内容
+   * @param fileName 文件名
+   */
   public async writeDataLocal<T>(
     dataName: string,
     data: T,
@@ -44,6 +50,11 @@ export class PersistenceService {
     }
   }
 
+  /**
+   * 从本地读取数据 带解析
+   * @param dataName 数据名 -> 文件夹名
+   * @param fileName 文件名
+   */
   public async readDataLocal<T>(
     dataName: string,
     fileName: string,

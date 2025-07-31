@@ -63,7 +63,7 @@ export class RedisService implements OnModuleInit {
 
     this.client.on('ready', () => {
       this.isConnected = true;
-      this.logger.debug('Redis连接就绪!');
+      this.logger.log('Redis连接就绪!');
     });
 
     this.client.on('reconnecting', () => {
@@ -71,6 +71,9 @@ export class RedisService implements OnModuleInit {
     });
   }
 
+  /**
+   * 等待redis就绪
+   */
   public async waitUntilReady(): Promise<void> {
     if (this.isConnected) return;
     return new Promise((resolve) => {
@@ -80,6 +83,9 @@ export class RedisService implements OnModuleInit {
     });
   }
 
+  /**
+   * 获取单一redis实例
+   */
   public getClient(): Redis {
     if (!this.isConnected) {
       this.logger.error('Redis未连接');
@@ -87,11 +93,20 @@ export class RedisService implements OnModuleInit {
     return this.client;
   }
 
+  /**
+   * 断开连接
+   */
   public async disconnect(): Promise<void> {
     await this.client.quit();
     this.isConnected = false;
   }
 
+  /**
+   * 储存对象
+   * @param key 键
+   * @param value 键值
+   * @param ttl 缓存时间
+   */
   public async setObject<T>(
     key: string,
     value: T,
@@ -104,6 +119,10 @@ export class RedisService implements OnModuleInit {
     }
   }
 
+  /**
+   * 从redis中获取对象
+   * @param key 键
+   */
   public async getObject<T>(key: string): Promise<T | undefined> {
     const serialized = await this.client.get(key);
     if (!serialized) return undefined;
@@ -111,6 +130,11 @@ export class RedisService implements OnModuleInit {
     return RedisUtils.reviveDates(deserialized);
   }
 
+  /**
+   * 更新redis中的呃对象
+   * @param key
+   * @param updates
+   */
   public async update<T>(key: string, updates: T): Promise<T> {
     const existing = await this.getObject<T>(key);
     if (!existing) {
@@ -121,6 +145,11 @@ export class RedisService implements OnModuleInit {
     return updated;
   }
 
+  /**
+   * 从本地或redis获取对象
+   * @param key 键 / 文件夹名
+   * @param fileName 文件名
+   */
   public async fetch<T>(key: string, fileName: string): Promise<T | undefined> {
     const data = await this.getObject<T>(key);
     if (data) return data;
@@ -134,6 +163,12 @@ export class RedisService implements OnModuleInit {
     this.logger.error(`数据${key}不存在`);
   }
 
+  /**
+   * 保存对象
+   * @param key 键
+   * @param data 内容
+   * @param fileName 文件名
+   */
   public async persistData<T>(
     key: string,
     data: T,

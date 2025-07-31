@@ -56,6 +56,9 @@ export class SystemService {
     process.exit(0);
   }
 
+  /**
+   * 检查更新
+   */
   async checkUpdate(): Promise<void> {
     const updated = await this.autoUpdateService.checkForUpdates();
     if (updated) {

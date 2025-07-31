@@ -22,7 +22,7 @@ export class AutoUpdateService {
   }
 
   /**
-   * 检查是否有远程更新
+   * 检查远程更新
    */
   async checkForUpdates(): Promise<boolean> {
     try {

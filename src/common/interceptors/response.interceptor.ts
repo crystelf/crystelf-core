@@ -7,6 +7,9 @@ import {
 import { Observable, map } from 'rxjs';
 import { ApiResponse } from '../response-format';
 
+/**
+ * 规范返回格式
+ */
 @Injectable()
 export class ResponseInterceptor<T>
   implements NestInterceptor<T, ApiResponse<T>>

@@ -14,6 +14,11 @@ export class AppConfigService implements OnModuleInit {
     this.checkRequiredVariables();
   }
 
+  /**
+   * 获取环境变量
+   * @param key 键值
+   * @param defaultValue 默认
+   */
   get<T = string>(key: string, defaultValue?: T): T | undefined {
     const value = this.nestConfigService.get<T>(key);
     if (value === undefined || value === null) {

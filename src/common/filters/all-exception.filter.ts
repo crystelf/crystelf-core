@@ -6,6 +6,9 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 
+/**
+ * 异常类
+ */
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
