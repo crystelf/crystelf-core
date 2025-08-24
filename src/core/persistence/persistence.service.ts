@@ -19,6 +19,11 @@ export class PersistenceService {
     private readonly fileService: FilesService,
   ) {}
 
+  /**
+   * 确保有某个目录
+   * @param dataName 目录名/资源名
+   * @private
+   */
   private async ensureDataPath(dataName: string): Promise<void> {
     const dataPath = path.join(this.paths.get('userData'), dataName);
     try {

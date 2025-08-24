@@ -7,6 +7,7 @@ import { ToolsModule } from './core/tools/tools.module';
 import { AutoUpdateModule } from './core/auto-update/auto-update.module';
 import { PersistenceModule } from './core/persistence/persistence.module';
 import { RedisModule } from './core/redis/redis.module';
+import { WsModule } from './core/ws/ws.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { RedisModule } from './core/redis/redis.module';
     PersistenceModule,
     AutoUpdateModule,
     RedisModule,
+    WsModule,
   ],
 })
 export class AppModule {}
