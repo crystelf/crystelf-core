@@ -5,6 +5,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { AllExceptionsFilter } from './common/filters/all-exception.filter';
 import { SystemService } from './core/system/system.service';
+import { WsAdapter } from '@nestjs/platform-ws';
 
 async function bootstrap() {
   Logger.log('晶灵核心初始化..');
@@ -24,6 +25,7 @@ async function bootstrap() {
     .build();
   const document = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('', app, document);
+  app.useWebSocketAdapter(new WsAdapter(app));
   await app.listen(7000);
   await systemService.checkUpdate().catch((err) => {
     Logger.error(`自动更新失败: ${err?.message}`, '', 'System');

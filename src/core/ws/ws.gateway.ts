@@ -8,11 +8,17 @@ import { Inject, Logger } from '@nestjs/common';
 import { Server, WebSocket } from 'ws';
 import { WsTools } from './ws.tools';
 import { WsClientManager } from './ws-client.manager';
-import { AuthenticatedSocket, AuthMessage, WSMessage } from '../../types/ws';
+import {
+  AuthenticatedSocket,
+  AuthMessage,
+  WSMessage,
+} from '../../types/ws/ws.interface';
 import { AppConfigService } from '../../config/config.service';
+import { WsMessageHandler } from './ws-message.handler';
 
-@WebSocketGateway({
+@WebSocketGateway(7001, {
   cors: { origin: '*' },
+  driver: 'ws',
 })
 export class WsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   private readonly logger = new Logger(WsGateway.name);
@@ -24,11 +30,19 @@ export class WsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     @Inject(AppConfigService)
     private readonly configService: AppConfigService,
+    @Inject(WsClientManager)
     private readonly wsClientManager: WsClientManager,
+    @Inject(WsMessageHandler)
+    private readonly wsMessageHandler: WsMessageHandler,
   ) {
     this.secret = this.configService.get<string>('WS_SECRET');
   }
 
+  /**
+   * 新的连接请求
+   * @param client 客户端
+   * @param req
+   */
   async handleConnection(client: AuthenticatedSocket, req: any) {
     const ip = req.socket.remoteAddress || 'unknown';
     this.logger.log(`收到来自 ${ip} 的 WebSocket 连接请求..`);
@@ -49,6 +63,10 @@ export class WsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
   }
 
+  /**
+   * 断开某个连接
+   * @param client 客户端
+   */
   async handleDisconnect(client: AuthenticatedSocket) {
     if (client.heartbeat) clearInterval(client.heartbeat);
     if (client.clientId) {
@@ -57,6 +75,12 @@ export class WsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
+  /**
+   * 不合法消息
+   * @param client 客户端
+   * @param ip
+   * @private
+   */
   private async handleInvalidMessage(client: WebSocket, ip: string) {
     this.logger.warn(`Invalid message received from ${ip}`);
     await WsTools.send(client, {
@@ -65,6 +89,13 @@ export class WsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
   }
 
+  /**
+   * 消息路由
+   * @param client 客户端
+   * @param msg 消息
+   * @param ip
+   * @private
+   */
   private async routeMessage(
     client: AuthenticatedSocket,
     msg: WSMessage,
@@ -86,13 +117,20 @@ export class WsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.logger.debug(
       `Routing message from ${client.clientId}: ${JSON.stringify(msg)}`,
     );
-    // TODO: 注入 handler 服务
+    await this.wsMessageHandler.handle(client, client.clientId!, msg);
   }
 
   private isAuthMessage(msg: WSMessage): msg is AuthMessage {
     return msg.type === 'auth';
   }
 
+  /**
+   * 连接验证
+   * @param client 客户端
+   * @param msg 消息
+   * @param ip
+   * @private
+   */
   private async handleAuth(
     client: AuthenticatedSocket,
     msg: AuthMessage,
