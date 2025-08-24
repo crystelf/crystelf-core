@@ -5,17 +5,21 @@ import {
   UnauthorizedException,
   Inject,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBody } from '@nestjs/swagger';
-import { SystemWebService } from './system.service';
+import { ApiTags, ApiOperation, ApiBody, ApiProperty } from '@nestjs/swagger';
+import { SystemWebService } from './systemWeb.service';
 import { ToolsService } from '../../core/tools/tools.service';
 
 class TokenDto {
+  @ApiProperty({
+    description: '密钥',
+    example: '1111',
+  })
   token: string;
 }
 
 @ApiTags('System')
 @Controller('system')
-export class SystemController {
+export class SystemWebController {
   constructor(
     @Inject(SystemWebService)
     private readonly systemService: SystemWebService,
@@ -29,7 +33,7 @@ export class SystemController {
   @Post('restart')
   @ApiOperation({
     summary: '系统重启',
-    description: '传入正确的 token 后，核心将执行重启。',
+    description: '核心执行重启',
   })
   @ApiBody({ type: TokenDto })
   async systemRestart(@Body() body: TokenDto): Promise<string> {
@@ -46,7 +50,7 @@ export class SystemController {
   @Post('getRestartTime')
   @ApiOperation({
     summary: '获取重启所需时间',
-    description: '传入正确的 token，返回上次核心重启的耗时',
+    description: '返回上次核心重启的耗时',
   })
   @ApiBody({ type: TokenDto })
   async getRestartTime(@Body() body: TokenDto): Promise<string> {

@@ -8,6 +8,7 @@ import { AutoUpdateModule } from './core/auto-update/auto-update.module';
 import { PersistenceModule } from './core/persistence/persistence.module';
 import { RedisModule } from './core/redis/redis.module';
 import { WsModule } from './core/ws/ws.module';
+import { SystemWebModule } from './modules/system/systemWeb.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { WsModule } from './core/ws/ws.module';
     AutoUpdateModule,
     RedisModule,
     WsModule,
+    SystemWebModule,
   ],
 })
 export class AppModule {}
