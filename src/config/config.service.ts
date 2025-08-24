@@ -19,7 +19,7 @@ export class AppConfigService implements OnModuleInit {
    * @param key 键值
    * @param defaultValue 默认
    */
-  get<T = string>(key: string, defaultValue?: T): T | undefined {
+  public get<T = string>(key: string, defaultValue?: T): T | undefined {
     const value = this.nestConfigService.get<T>(key);
     if (value === undefined || value === null) {
       if (defaultValue !== undefined) {

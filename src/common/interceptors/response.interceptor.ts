@@ -22,7 +22,7 @@ export class ResponseInterceptor<T>
       map((data) => ({
         success: true,
         data,
-        message: '操作成功',
+        message: '欢迎使用晶灵核心 | Welcome to use crystelf-core',
       })),
     );
   }

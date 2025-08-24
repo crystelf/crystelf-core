@@ -3,7 +3,6 @@ import { WsTools } from './ws.tools';
 import { WsClientManager } from './ws-client.manager';
 import { IMessageHandler } from '../../types/ws/ws.handlers.interface';
 import { AuthenticatedSocket } from '../../types/ws/ws.interface';
-import { TestHandler } from './handlers/test.handler';
 
 @Injectable()
 export class WsMessageHandler {

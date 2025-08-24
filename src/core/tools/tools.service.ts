@@ -1,10 +1,19 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { RetryOptions } from './retry-options.interface';
+import { AppConfigService } from '../../config/config.service';
 
 @Injectable()
 export class ToolsService {
   private readonly logger = new Logger(ToolsService.name);
-
+  constructor(
+    @Inject(AppConfigService)
+    private readonly config: AppConfigService,
+  ) {}
   /**
    * 异步重试
    * @param operation
@@ -47,5 +56,27 @@ export class ToolsService {
    */
   getRandomDelay(min: number, max: number): number {
     return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  /**
+   * 检查 token 是否有效
+   * @param token 待验证的 token
+   */
+  checkToken(token: string): boolean {
+    const expected = this.config.get<string>('TOKEN');
+    if (!expected) {
+      this.logger.error('环境变量 TOKEN 未配置，无法进行验证！');
+      throw new UnauthorizedException('系统配置错误，缺少 TOKEN');
+    }
+    return token === expected;
+  }
+
+  /**
+   * token 验证失败时的逻辑
+   * @param token 无效的 token
+   */
+  tokenCheckFailed(token: string): never {
+    this.logger.warn(`有个小可爱使用了错误的 token: ${JSON.stringify(token)}`);
+    throw new UnauthorizedException('token 验证失败..');
   }
 }

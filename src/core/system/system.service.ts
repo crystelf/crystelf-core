@@ -2,7 +2,6 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import * as path from 'path';
 import * as fs from 'fs';
 import { PathService } from '../path/path.service';
-import { AutoUpdateModule } from '../auto-update/auto-update.module';
 import { AutoUpdateService } from '../auto-update/auto-update.service';
 import * as process from 'node:process';
 
