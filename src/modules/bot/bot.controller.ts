@@ -1,156 +1,70 @@
-import express from 'express';
-import response from '../../utils/core/response';
-import BotService from './bot.service';
-import tools from '../../utils/modules/tools';
-import logger from '../../utils/core/logger';
-import wsClientManager from '../../services/ws/wsClientManager';
+import { Body, Controller, Inject, Post, UseGuards } from '@nestjs/common';
+import { ApiOperation, ApiTags, ApiBody } from '@nestjs/swagger';
+import { BotService } from './bot.service';
+import { WsClientManager } from 'src/core/ws/ws-client.manager';
+import { TokenAuthGuard } from 'src/core/tools/token-auth.guard';
+import {
+  BroadcastDto,
+  GroupInfoDto,
+  SendMessageDto,
+  TokenDto,
+} from './bot.dto';
 
-class BotController {
-  private readonly router: express.Router;
+@ApiTags('Bot相关操作')
+@Controller('bot')
+export class BotController {
+  constructor(
+    @Inject(BotService)
+    private readonly botService: BotService,
+    @Inject(WsClientManager)
+    private readonly wsClientManager: WsClientManager,
+  ) {}
 
-  constructor() {
-    this.router = express.Router();
-    this.init();
+  @Post('getBotId')
+  @UseGuards(TokenAuthGuard)
+  @ApiOperation({ summary: '获取当前连接到核心的全部 botId 数组' })
+  async postBotsId(@Body() dto: TokenDto) {
+    return this.botService.getBotId();
   }
 
-  public getRouter(): express.Router {
-    return this.router;
+  @Post('getGroupInfo')
+  @UseGuards(TokenAuthGuard)
+  @ApiOperation({ summary: '获取群聊信息' })
+  @ApiBody({ type: GroupInfoDto })
+  async postGroupInfo(@Body() dto: GroupInfoDto) {
+    return this.botService.getGroupInfo({ groupId: dto.groupId });
   }
 
-  private init(): void {
-    this.router.post(`/getBotId`, this.postBotsId);
-    this.router.post('/getGroupInfo', this.postGroupInfo);
-    this.router.post('/sendMessage', this.sendMessage);
-    this.router.post('/reportBots', this.reportBots);
-    this.router.post('/broadcast', this.smartBroadcast);
+  @Post('reportBots')
+  @UseGuards(TokenAuthGuard)
+  @ApiOperation({ summary: '广播：要求同步群聊信息和 bot 连接情况' })
+  async reportBots(@Body() dto: TokenDto) {
+    const sendMessage = {
+      type: 'reportBots',
+      data: {},
+    };
+    await this.wsClientManager.broadcast(sendMessage);
+    return { message: '正在请求同步 bot 数据..' };
   }
 
-  /**
-   * 获取当前连接到核心的全部botId数组
-   * @param req
-   * @param res
-   */
-  private postBotsId = async (req: express.Request, res: express.Response): Promise<void> => {
-    try {
-      const token = req.body.token;
-      if (tools.checkToken(token.toString())) {
-        const result = await BotService.getBotId();
-        await response.success(res, result);
-      } else {
-        await tools.tokenCheckFailed(res, token);
-      }
-    } catch (err) {
-      await response.error(res, `请求失败..`, 500, err);
+  @Post('sendMessage')
+  @UseGuards(TokenAuthGuard)
+  @ApiOperation({ summary: '发送消息到群聊', description: '自动选择bot发送' })
+  @ApiBody({ type: SendMessageDto })
+  async sendMessage(@Body() dto: SendMessageDto) {
+    const flag = await this.botService.sendMessage(dto.groupId, dto.message);
+    if (!flag) {
+      return { message: '消息发送失败' };
     }
-  };
+    return { message: '消息发送成功' };
+  }
 
-  /**
-   * 获取群聊信息
-   * @example req示例
-   * ```json
-   * {
-   *  token: ‘114514’,
-   *  groupId: 114514
-   * }
-   * ```
-   * @param req
-   * @param res
-   */
-  private postGroupInfo = async (req: express.Request, res: express.Response): Promise<void> => {
-    try {
-      const token = req.body.token;
-      if (tools.checkToken(token.toString())) {
-        const groupId: number = req.body.groupId;
-        let returnData = await BotService.getGroupInfo({ groupId: groupId });
-        if (returnData) {
-          await response.success(res, returnData);
-          logger.debug(returnData);
-        } else {
-          await response.error(res);
-        }
-      } else {
-        await tools.tokenCheckFailed(res, token);
-      }
-    } catch (e) {
-      await response.error(res);
-    }
-  };
-
-  /**
-   * 广播要求同步群聊信息和bot连接情况
-   * @param req
-   * @param res
-   */
-  // TODO 测试接口可用性
-  private reportBots = async (req: express.Request, res: express.Response): Promise<void> => {
-    try {
-      const token = req.body.token;
-      if (tools.checkToken(token.toString())) {
-        const sendMessage = {
-          type: 'reportBots',
-          data: {},
-        };
-        logger.info(`正在请求同步bot数据..`);
-        await response.success(res, {});
-        await wsClientManager.broadcast(sendMessage);
-      } else {
-        await tools.tokenCheckFailed(res, token);
-      }
-    } catch (e) {
-      await response.error(res);
-    }
-  };
-
-  /**
-   * 发送消息到群聊,自动获取client
-   * @param req
-   * @param res
-   */
-  // TODO 测试接口可用性
-  private sendMessage = async (req: express.Request, res: express.Response): Promise<void> => {
-    try {
-      const token = req.body.token;
-      if (tools.checkToken(token.toString())) {
-        const groupId: number = Number(req.body.groupId);
-        const message: string = req.body.message.toString();
-        const flag: boolean = await BotService.sendMessage(groupId, message);
-        if (flag) {
-          await response.success(res, { message: '消息发送成功..' });
-        } else {
-          await response.error(res);
-        }
-      } else {
-        await tools.tokenCheckFailed(res, token);
-      }
-    } catch (e) {
-      await response.error(res);
-    }
-  };
-
-  /**
-   * 智能广播消息到全部群聊
-   * @param req
-   * @param res
-   */
-  // TODO 测试接口可用性
-  private smartBroadcast = async (req: express.Request, res: express.Response): Promise<void> => {
-    try {
-      const token = req.body.token;
-      const message = req.body.message;
-      if (!message || typeof message !== 'string') {
-        return await response.error(res, '缺少 message 字段', 400);
-      }
-      if (tools.checkToken(token.toString())) {
-        logger.info(`广播任务已开始，正在后台执行..`);
-        await response.success(res, '广播任务已开始，正在后台执行..');
-        await BotService.broadcastToAllGroups(message);
-      } else {
-        await tools.tokenCheckFailed(res, token);
-      }
-    } catch (e) {
-      await response.error(res);
-    }
-  };
+  @Post('broadcast')
+  @UseGuards(TokenAuthGuard)
+  @ApiOperation({ summary: '广播消息到全部群聊', description: '随机延迟' })
+  @ApiBody({ type: BroadcastDto })
+  async smartBroadcast(@Body() dto: BroadcastDto) {
+    await this.botService.broadcastToAllGroups(dto.message);
+    return { message: '广播任务已开始，正在后台执行..' };
+  }
 }
-
-export default new BotController();

@@ -1,66 +1,83 @@
-import express from 'express';
-import WordsService from './words.service';
-import response from '../../utils/core/response';
-import tools from '../../utils/modules/tools';
+import {
+  Controller,
+  Get,
+  Param,
+  Post,
+  HttpException,
+  HttpStatus,
+  Logger,
+  Inject,
+  UseGuards,
+} from '@nestjs/common';
+import { WordsService } from './words.service';
+import { TokenAuthGuard } from '../../core/tools/token-auth.guard';
+import { ApiBody, ApiOperation, ApiProperty } from '@nestjs/swagger';
 
-class WordsController {
-  private readonly router: express.Router;
+class WordsDto {
+  @ApiProperty({
+    description: '文案id',
+    example: 'poke',
+  })
+  id: string;
+  @ApiProperty({
+    description: '密钥',
+    example: '1111',
+  })
+  token: string;
+}
 
-  constructor() {
-    this.router = express.Router();
-    this.init();
-  }
+@Controller('words')
+export class WordsController {
+  private readonly logger = new Logger(WordsController.name);
 
-  public getRouter(): express.Router {
-    return this.router;
-  }
-
-  private init(): void {
-    this.router.get('/getText/:id', this.getText);
-    this.router.post('/reloadText', this.reloadWord);
-  }
+  constructor(
+    @Inject(WordsService) private readonly wordsService: WordsService,
+  ) {}
 
   /**
    * 获取随机文案
-   * @param req
-   * @param res
    */
-  private getText = async (req: express.Request, res: express.Response): Promise<void> => {
+  @Get('getText/:id')
+  @ApiOperation({
+    summary: '获取随机文案',
+  })
+  async getText(@Param('id') id: string) {
     try {
-      const id = req.params.id;
-      const texts = await WordsService.loadWordById(id.toString());
+      const texts = await this.wordsService.loadWordById(id);
       if (!texts || texts.length === 0) {
-        return await response.error(res, `文案${id}不存在或为空..`, 404);
+        throw new HttpException(
+          `文案 ${id} 不存在或为空..`,
+          HttpStatus.NOT_FOUND,
+        );
       }
       const randomIndex = Math.floor(Math.random() * texts.length);
-      const result = texts[randomIndex];
-      await response.success(res, result);
+      return texts[randomIndex];
     } catch (e) {
-      await response.error(res);
+      this.logger.error(`getText 失败: ${e?.message}`);
+      throw new HttpException('服务器错误', HttpStatus.INTERNAL_SERVER_ERROR);
     }
-  };
+  }
 
   /**
    * 重载文案
-   * @param req
-   * @param res
    */
-  private reloadWord = async (req: express.Request, res: express.Response): Promise<void> => {
+  @Post('reloadText/:id')
+  @ApiOperation({
+    summary: '重载某条文案',
+  })
+  @UseGuards(TokenAuthGuard)
+  @ApiBody({ type: WordsDto })
+  async reloadWord(@Param('id') id: string, @Param('token') token: string) {
     try {
-      const id = req.params.id;
-      const token = req.params.token;
-      if (tools.checkToken(token)) {
-        if (await WordsService.reloadWord(id.toString())) {
-          await response.success(res, '成功重载..');
-        } else {
-          await response.error(res, '重载失败..');
-        }
+      const success = await this.wordsService.reloadWord(id);
+      if (success) {
+        return '成功重载..';
       } else {
-        await tools.tokenCheckFailed(res, token);
+        throw new HttpException('重载失败..', HttpStatus.BAD_REQUEST);
       }
     } catch (e) {
-      await response.error(res);
+      this.logger.error(`reloadWord 失败: ${e?.message}`);
+      throw new HttpException('服务器错误', HttpStatus.INTERNAL_SERVER_ERROR);
     }
-  };
+  }
 }
-export default new WordsController();

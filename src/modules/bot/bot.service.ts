@@ -1,18 +1,32 @@
-import logger from '../../utils/core/logger';
-import paths from '../../utils/core/path';
-import fs from 'fs/promises';
-import path from 'path';
-import redisService from '../../services/redis/redis';
-import wsClientManager from '../../services/ws/wsClientManager';
-import tools from '../../utils/core/tool';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import * as fs from 'fs/promises';
+import * as path from 'path';
+import { RedisService } from 'src/core/redis/redis.service';
+import { WsClientManager } from 'src/core/ws/ws-client.manager';
+import { ToolsService } from '../../core/tools/tools.service';
+import { PathService } from '../../core/path/path.service';
 
-class BotService {
+@Injectable()
+export class BotService {
+  private readonly logger = new Logger(BotService.name);
+
+  constructor(
+    @Inject(RedisService)
+    private readonly redisService: RedisService,
+    @Inject(WsClientManager)
+    private readonly wsClientManager: WsClientManager,
+    @Inject(ToolsService)
+    private readonly tools: ToolsService,
+    @Inject(PathService)
+    private readonly paths: PathService,
+  ) {}
+
   /**
    * 获取botId数组
    */
-  public async getBotId(): Promise<{ uin: number; nickName: string }[]> {
-    logger.debug('GetBotId..');
-    const userPath = paths.get('userData');
+  async getBotId(): Promise<{ uin: number; nickName: string }[]> {
+    this.logger.debug('正在请求获取在线的bot..');
+    const userPath = this.paths.get('userData');
     const botsPath = path.join(userPath, '/crystelfBots');
     const dirData = await fs.readdir(botsPath);
     const uins: { uin: number; nickName: string }[] = [];
@@ -21,7 +35,7 @@ class BotService {
       if (!fileName.endsWith('.json')) continue;
 
       try {
-        const raw = await redisService.fetch('crystelfBots', fileName);
+        const raw = await this.redisService.fetch('crystelfBots', fileName);
         if (!raw || !Array.isArray(raw)) continue;
 
         for (const bot of raw) {
@@ -32,10 +46,9 @@ class BotService {
           }
         }
       } catch (err) {
-        logger.error(`读取或解析 ${fileName} 出错: ${err}`);
+        this.logger.error(`读取或解析 ${fileName} 出错: ${err}`);
       }
     }
-    logger.debug(uins);
     return uins;
   }
 
@@ -43,15 +56,16 @@ class BotService {
    * 获取群聊信息
    * @param data
    */
-  public async getGroupInfo(data: {
+  async getGroupInfo(data: {
     botId?: number;
     groupId: number;
     clientId?: string;
   }): Promise<any> {
-    logger.debug('GetGroupInfo..');
-    const sendBot: number | undefined = data.botId ?? (await this.getGroupBot(data.groupId));
+    this.logger.debug(`正在尝试获取${data.groupId}的信息..)`);
+    const sendBot: number | undefined =
+      data.botId ?? (await this.getGroupBot(data.groupId));
     if (!sendBot) {
-      logger.warn(`不存在能向群聊${data.groupId}发送消息的Bot!`);
+      this.logger.warn(`不存在能向群聊${data.groupId}发送消息的Bot!`);
       return undefined;
     }
 
@@ -65,7 +79,10 @@ class BotService {
     };
 
     if (sendData.data.clientID) {
-      const returnData = await wsClientManager.sendAndWait(sendData.data.clientID, sendData);
+      const returnData = await this.wsClientManager.sendAndWait(
+        sendData.data.clientID,
+        sendData,
+      );
       return returnData ?? undefined;
     }
     return undefined;
@@ -76,47 +93,42 @@ class BotService {
    * @param groupId 群号
    * @param message 消息
    */
-  public async sendMessage(groupId: number, message: string): Promise<boolean> {
-    logger.info(`发送${message}到${groupId}..`);
+  async sendMessage(groupId: number, message: string): Promise<boolean> {
+    this.logger.log(`发送${message}到${groupId}..`);
     const sendBot = await this.getGroupBot(groupId);
     if (!sendBot) {
-      logger.warn(`不存在能向群聊${groupId}发送消息的Bot!`);
+      this.logger.warn(`不存在能向群聊${groupId}发送消息的Bot!`);
       return false;
     }
     const client = await this.getBotClient(sendBot);
     if (!client) {
-      logger.warn(`不存在${sendBot}对应的client!`);
+      this.logger.warn(`不存在${sendBot}对应的client!`);
       return false;
     }
     const sendData = {
       type: 'sendMessage',
-      data: {
-        botId: sendBot,
-        groupId: groupId,
-        clientId: client,
-        message: message,
-      },
+      data: { botId: sendBot, groupId, clientId: client, message },
     };
-    await wsClientManager.send(client, sendData);
+    await this.wsClientManager.send(client, sendData);
     return true;
   }
 
   /**
-   * 智能投放广播消息实现
+   * 广播消息
    * @param message 要广播的消息
    */
-  // TODO 添加群聊信誉分机制，低于30分的群聊不播报等..
-  public async broadcastToAllGroups(message: string): Promise<void> {
-    const userPath = paths.get('userData');
+  async broadcastToAllGroups(message: string): Promise<void> {
+    const userPath = this.paths.get('userData');
     const botsPath = path.join(userPath, '/crystelfBots');
     const dirData = await fs.readdir(botsPath);
-    const groupMap: Map<number, { botId: number; clientId: string }[]> = new Map();
-
+    const groupMap: Map<number, { botId: number; clientId: string }[]> =
+      new Map();
+    this.logger.log(`广播消息：${message}`);
     for (const fileName of dirData) {
       if (!fileName.endsWith('.json')) continue;
 
       const clientId = path.basename(fileName, '.json');
-      const botList = await redisService.fetch('crystelfBots', fileName);
+      const botList = await this.redisService.fetch('crystelfBots', fileName);
       if (!Array.isArray(botList)) continue;
 
       for (const bot of botList) {
@@ -139,7 +151,9 @@ class BotService {
     }
 
     for (const [groupId, botEntries] of groupMap.entries()) {
-      logger.debug(`[群 ${groupId}] 候选Bot列表: ${JSON.stringify(botEntries)}`);
+      this.logger.debug(
+        `[群 ${groupId}] 候选Bot列表: ${JSON.stringify(botEntries)}`,
+      );
 
       const clientGroups = new Map<string, number[]>();
       botEntries.forEach(({ botId, clientId }) => {
@@ -147,30 +161,32 @@ class BotService {
         clientGroups.get(clientId)!.push(botId);
       });
 
-      const selectedClientId = tools.getRandomItem([...clientGroups.keys()]);
+      const selectedClientId = this.tools.getRandomItem([
+        ...clientGroups.keys(),
+      ]);
       const botCandidates = clientGroups.get(selectedClientId)!;
-      const selectedBotId = tools.getRandomItem(botCandidates);
-      const delay = tools.getRandomDelay(10_000, 150_000);
+      const selectedBotId = this.tools.getRandomItem(botCandidates);
+      const delay = this.tools.getRandomDelay(10_000, 150_000);
 
-      ((groupId, selectedClientId, selectedBotId, delay) => {
-        setTimeout(() => {
-          const sendData = {
-            type: 'sendMessage',
-            data: {
-              botId: selectedBotId,
-              groupId: groupId,
-              clientId: selectedClientId,
-              message: message,
-            },
-          };
-          logger.info(
-            `[广播] 向群 ${groupId} 使用Bot ${selectedBotId}（客户端 ${selectedClientId}）发送消息${message}，延迟 ${delay / 1000} 秒`
-          );
-          wsClientManager.send(selectedClientId, sendData).catch((e) => {
-            logger.error(`发送到群${groupId}失败:`, e);
-          });
-        }, delay);
-      })(groupId, selectedClientId, selectedBotId, delay);
+      setTimeout(() => {
+        const sendData = {
+          type: 'sendMessage',
+          data: {
+            botId: selectedBotId,
+            groupId,
+            clientId: selectedClientId,
+            message,
+          },
+        };
+        this.logger.log(
+          `[广播] 向群 ${groupId} 使用Bot ${selectedBotId}（客户端 ${selectedClientId}）发送消息${message}，延迟 ${
+            delay / 1000
+          } 秒`,
+        );
+        this.wsClientManager.send(selectedClientId, sendData).catch((e) => {
+          this.logger.error(`发送到群${groupId}失败:`, e);
+        });
+      }, delay);
     }
   }
 
@@ -180,7 +196,7 @@ class BotService {
    * @private
    */
   private async getBotClient(botId: number): Promise<string | undefined> {
-    const userPath = paths.get('userData');
+    const userPath = this.paths.get('userData');
     const botsPath = path.join(userPath, '/crystelfBots');
     const dirData = await fs.readdir(botsPath);
 
@@ -188,7 +204,7 @@ class BotService {
       if (!clientId.endsWith('.json')) continue;
 
       try {
-        const raw = await redisService.fetch('crystelfBots', clientId);
+        const raw = await this.redisService.fetch('crystelfBots', clientId);
         if (!Array.isArray(raw)) continue;
 
         for (const bot of raw) {
@@ -198,7 +214,7 @@ class BotService {
           }
         }
       } catch (err) {
-        logger.error(`读取${clientId}出错..`);
+        this.logger.error(`读取${clientId}出错..`);
       }
     }
     return undefined;
@@ -210,7 +226,7 @@ class BotService {
    * @private
    */
   private async getGroupBot(groupId: number): Promise<number | undefined> {
-    const userPath = paths.get('userData');
+    const userPath = this.paths.get('userData');
     const botsPath = path.join(userPath, '/crystelfBots');
     const dirData = await fs.readdir(botsPath);
 
@@ -218,7 +234,7 @@ class BotService {
       if (!clientId.endsWith('.json')) continue;
 
       try {
-        const raw = await redisService.fetch('crystelfBots', clientId);
+        const raw = await this.redisService.fetch('crystelfBots', clientId);
         if (!Array.isArray(raw)) continue;
 
         for (const bot of raw) {
@@ -231,11 +247,9 @@ class BotService {
           }
         }
       } catch (err) {
-        logger.error(`读取${clientId}出错..`);
+        this.logger.error(`读取${clientId}出错..`);
       }
     }
     return undefined;
   }
 }
-
-export default new BotService();

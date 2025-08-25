@@ -1,31 +1,44 @@
-import apps from './app';
-import logger from './utils/core/logger';
-import config from './utils/core/config';
-import redis from './services/redis/redis';
-import autoUpdater from './utils/core/autoUpdater';
-import System from './utils/core/system';
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { Logger, RequestMethod } from '@nestjs/common';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { ResponseInterceptor } from './common/interceptors/response.interceptor';
+import { AllExceptionsFilter } from './common/filters/all-exception.filter';
+import { SystemService } from './core/system/system.service';
+import { WsAdapter } from '@nestjs/platform-ws';
 
-config.check(['PORT', 'DEBUG', 'RD_PORT', 'RD_ADD', 'WS_SECRET', 'WS_PORT']);
-const PORT = config.get('PORT') || 3000;
-
-apps
-  .createApp()
-  .then(async (app) => {
-    app.listen(PORT, () => {
-      logger.info(`Crystelf-core listening on ${PORT}`);
-    });
-    const isUpdated = await autoUpdater.checkForUpdates();
-    if (isUpdated) {
-      logger.warn(`检测到更新，正在重启..`);
-      await System.restart();
-    }
-  })
-  .catch((err) => {
-    logger.error('Crystelf-core启动失败:', err);
-    process.exit(1);
+async function bootstrap() {
+  Logger.log('晶灵核心初始化..');
+  const app = await NestFactory.create(AppModule);
+  app.setGlobalPrefix('api', {
+    exclude: [
+      'cdn',
+      { path: 'cdn/(.*)', method: RequestMethod.ALL },
+      'public',
+      { path: 'public/(.*)', method: RequestMethod.ALL },
+    ],
   });
-
-process.on('SIGTERM', async () => {
-  await redis.disconnect();
-  process.exit(0);
+  app.useGlobalInterceptors(new ResponseInterceptor());
+  app.useGlobalFilters(new AllExceptionsFilter());
+  const systemService = app.get(SystemService);
+  const restartDuration = systemService.checkRestartTime();
+  if (restartDuration) {
+    new Logger('System').warn(`重启完成！耗时 ${restartDuration} 秒`);
+  }
+  const config = new DocumentBuilder()
+    .setTitle('晶灵核心')
+    .setDescription('为晶灵提供API服务')
+    .setVersion('1.0')
+    .build();
+  const document = () => SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('docs', app, document);
+  app.useWebSocketAdapter(new WsAdapter(app));
+  await app.listen(7000);
+  await systemService.checkUpdate().catch((err) => {
+    Logger.error(`自动更新失败: ${err?.message}`, '', 'System');
+  });
+}
+bootstrap().then(() => {
+  Logger.log(`API服务已启动：http://localhost:7000/api`);
+  Logger.log(`API文档： http://localhost:7000/docs`);
 });
