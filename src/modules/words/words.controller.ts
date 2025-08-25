@@ -51,7 +51,7 @@ export class WordsController {
         );
       }
       const randomIndex = Math.floor(Math.random() * texts.length);
-      return { success: true, data: texts[randomIndex] };
+      return texts[randomIndex];
     } catch (e) {
       this.logger.error(`getText 失败: ${e?.message}`);
       throw new HttpException('服务器错误', HttpStatus.INTERNAL_SERVER_ERROR);
