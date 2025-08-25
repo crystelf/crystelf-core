@@ -35,9 +35,8 @@ export class WordsService {
    * 启动定时检查 words 仓库更新
    */
   private startAutoUpdate() {
-    const wordsPath = this.paths.get('words');
-
     setInterval(async () => {
+      const wordsPath = this.paths.get('words');
       this.logger.log('定时检查文案仓库更新..');
       const updated = await this.autoUpdateService.checkRepoForUpdates(
         wordsPath,
