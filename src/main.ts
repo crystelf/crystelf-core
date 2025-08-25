@@ -10,7 +10,14 @@ import { WsAdapter } from '@nestjs/platform-ws';
 async function bootstrap() {
   Logger.log('晶灵核心初始化..');
   const app = await NestFactory.create(AppModule);
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('api', {
+    exclude: [
+      'cdn',
+      { path: 'cdn/(.*)', method: RequestMethod.ALL },
+      'public',
+      { path: 'public/(.*)', method: RequestMethod.ALL },
+    ],
+  });
   app.useGlobalInterceptors(new ResponseInterceptor());
   app.useGlobalFilters(new AllExceptionsFilter());
   const systemService = app.get(SystemService);

@@ -11,6 +11,7 @@ import { WsModule } from './core/ws/ws.module';
 import { SystemWebModule } from './modules/system/systemWeb.module';
 import { BotModule } from './modules/bot/bot.module';
 import { CdnModule } from './modules/cdn/cdn.module';
+import { WordsModule } from './modules/words/words.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { CdnModule } from './modules/cdn/cdn.module';
     SystemWebModule,
     BotModule,
     CdnModule,
+    WordsModule,
   ],
 })
 export class AppModule {}

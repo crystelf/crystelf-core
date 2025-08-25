@@ -55,13 +55,13 @@ export class CdnController {
     description: '由晶灵资源分发服务器(CDN)提供支持',
   })
   async getFile(@Res() res: Response, @Req() req: Request) {
-    const relativePath = req.url.replace('/api/cdn/', ''); //params.path;
+    const relativePath = req.url.replace('/cdn/', ''); //params.path;
     return this.deliverFile(relativePath, res);
   }
 
   @Get('public/files/*')
   async fromPublicFiles(@Res() res: Response, @Req() req: Request) {
-    const relativePath = req.url.replace('/api/public/files/', '');
+    const relativePath = req.url.replace('/public/files/', '');
     this.logger.debug(
       `请求 /public/files/${relativePath} → 代理到 /cdn/${relativePath}`,
     );
@@ -70,7 +70,7 @@ export class CdnController {
 
   @Get('public/cdn/*')
   async fromPublicCdn(@Req() req: Request, @Res() res: Response) {
-    const relativePath = req.url.replace('/api/public/cdn/', '');
+    const relativePath = req.url.replace('/public/cdn/', '');
     this.logger.debug(
       `请求 /public/cdn/${relativePath} → 代理到 /cdn/${relativePath}`,
     );
