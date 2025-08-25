@@ -21,16 +21,12 @@ export class PathService {
     const mappings: Record<PathType, string> = {
       root: this.baseDir,
       public: path.join(this.baseDir, 'public'),
-      images: path.join(this.baseDir, 'public/files/image'),
       log: path.join(this.baseDir, 'logs'),
       config: path.join(this.baseDir, 'config'),
       temp: path.join(this.baseDir, 'temp'),
       userData: path.join(this.baseDir, 'private/data'),
-      files: path.join(this.baseDir, 'public/files'),
-      media: path.join(this.baseDir, 'public/files/media'),
       package: path.join(this.baseDir, 'package.json'),
       modules: path.join(this.baseDir, 'src/modules'),
-      uploads: path.join(this.baseDir, 'public/files/uploads'),
       words: path.join(this.baseDir, 'private/data/word'),
     };
 
@@ -46,9 +42,8 @@ export class PathService {
       this.get('log'),
       this.get('config'),
       this.get('userData'),
-      this.get('media'),
       this.get('temp'),
-      this.get('uploads'),
+      this.get('public'),
       this.get('words'),
     ];
 
@@ -105,14 +100,10 @@ export class PathService {
 export type PathType =
   | 'root'
   | 'public'
-  | 'images'
   | 'log'
   | 'config'
   | 'temp'
   | 'userData'
-  | 'files'
   | 'package'
-  | 'media'
   | 'modules'
-  | 'words'
-  | 'uploads';
+  | 'words';

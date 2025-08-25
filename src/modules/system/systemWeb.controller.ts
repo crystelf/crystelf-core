@@ -4,12 +4,15 @@ import {
   Body,
   UnauthorizedException,
   Inject,
+  UseGuards,
+  Param,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBody, ApiProperty } from '@nestjs/swagger';
 import { SystemWebService } from './systemWeb.service';
 import { ToolsService } from '../../core/tools/tools.service';
+import { TokenAuthGuard } from '../../core/tools/token-auth.guard';
 
-class TokenDto {
+class WebServerDto {
   @ApiProperty({
     description: '密钥',
     example: '1111',
@@ -35,12 +38,10 @@ export class SystemWebController {
     summary: '系统重启',
     description: '核心执行重启',
   })
-  @ApiBody({ type: TokenDto })
-  async systemRestart(@Body() body: TokenDto): Promise<string> {
-    if (!this.toolService.checkToken(body.token)) {
-      throw new UnauthorizedException('Token 无效');
-    }
-    await this.systemService.systemRestart();
+  @UseGuards(TokenAuthGuard)
+  @ApiBody({ type: WebServerDto })
+  async systemRestart(@Param('token') token: string): Promise<string> {
+    this.systemService.systemRestart();
     return '核心正在重启..';
   }
 
@@ -52,11 +53,9 @@ export class SystemWebController {
     summary: '获取重启所需时间',
     description: '返回上次核心重启的耗时',
   })
-  @ApiBody({ type: TokenDto })
-  async getRestartTime(@Body() body: TokenDto): Promise<string> {
-    if (!this.toolService.checkToken(body.token)) {
-      throw new UnauthorizedException('Token 无效');
-    }
+  @UseGuards(TokenAuthGuard)
+  @ApiBody({ type: WebServerDto })
+  async getRestartTime(@Param('token') token: string): Promise<string> {
     return await this.systemService.getRestartTime();
   }
 }

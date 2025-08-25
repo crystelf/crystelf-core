@@ -9,6 +9,8 @@ import { PersistenceModule } from './core/persistence/persistence.module';
 import { RedisModule } from './core/redis/redis.module';
 import { WsModule } from './core/ws/ws.module';
 import { SystemWebModule } from './modules/system/systemWeb.module';
+import { BotModule } from './modules/bot/bot.module';
+import { CdnModule } from './modules/cdn/cdn.module';
 
 @Module({
   imports: [
@@ -22,6 +24,8 @@ import { SystemWebModule } from './modules/system/systemWeb.module';
     RedisModule,
     WsModule,
     SystemWebModule,
+    BotModule,
+    CdnModule,
   ],
 })
 export class AppModule {}

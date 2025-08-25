@@ -1,6 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import fs from 'fs/promises';
-import path from 'path';
+import * as path from 'path';
 import { PathService } from '../../core/path/path.service';
 import { SystemService } from 'src/core/system/system.service';
 

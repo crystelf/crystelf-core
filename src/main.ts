@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { Logger } from '@nestjs/common';
+import { Logger, RequestMethod } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { AllExceptionsFilter } from './common/filters/all-exception.filter';
@@ -24,7 +24,7 @@ async function bootstrap() {
     .setVersion('1.0')
     .build();
   const document = () => SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('', app, document);
+  SwaggerModule.setup('docs', app, document);
   app.useWebSocketAdapter(new WsAdapter(app));
   await app.listen(7000);
   await systemService.checkUpdate().catch((err) => {
@@ -32,6 +32,6 @@ async function bootstrap() {
   });
 }
 bootstrap().then(() => {
-  Logger.log(`API服务已启动：http://localhost:7000`);
-  Logger.log(`API文档： http://localhost:7000/api`);
+  Logger.log(`API服务已启动：http://localhost:7000/api`);
+  Logger.log(`API文档： http://localhost:7000/docs`);
 });
