@@ -32,13 +32,7 @@ export class AppConfigService implements OnModuleInit {
 
   private checkRequiredVariables(): void {
     this.logger.log('检查必要环境变量..');
-    const requiredVariables = [
-      'PORT',
-      'RD_PORT',
-      'RD_ADD',
-      'WS_SECRET',
-      'WS_PORT',
-    ];
+    const requiredVariables = ['RD_PORT', 'RD_ADD', 'WS_SECRET'];
 
     requiredVariables.forEach((key) => {
       const value = this.nestConfigService.get(key);

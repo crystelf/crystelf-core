@@ -16,7 +16,7 @@ import {
 import { AppConfigService } from '../../config/config.service';
 import { WsMessageHandler } from './ws-message.handler';
 
-@WebSocketGateway(7001, {
+@WebSocketGateway({
   cors: { origin: '*' },
   driver: 'ws',
 })
