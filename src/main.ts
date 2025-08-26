@@ -33,7 +33,7 @@ async function bootstrap() {
   const document = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
   app.useWebSocketAdapter(new WsAdapter(app));
-  await app.listen(7000);
+  await app.listen(6868);
   await systemService.checkUpdate().catch((err) => {
     Logger.error(`自动更新失败: ${err?.message}`, '', 'System');
   });
