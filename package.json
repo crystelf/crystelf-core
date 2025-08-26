@@ -1,8 +1,8 @@
 {
-  "name": "nest-backend",
-  "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "name": "crystelf-core",
+  "version": "1.0.0",
+  "description": "crystelf - working together for a bright future",
+  "author": "Jerryplusy",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {

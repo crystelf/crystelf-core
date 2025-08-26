@@ -27,7 +27,7 @@ export class PathService {
       userData: path.join(this.baseDir, 'private/data'),
       package: path.join(this.baseDir, 'package.json'),
       modules: path.join(this.baseDir, 'src/modules'),
-      words: path.join(this.baseDir, 'private/word'),
+      words: path.join(this.baseDir, 'private/words/src'),
     };
 
     return type ? mappings[type] : this.baseDir;

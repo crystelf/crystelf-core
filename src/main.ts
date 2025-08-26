@@ -39,6 +39,6 @@ async function bootstrap() {
   });
 }
 bootstrap().then(() => {
-  Logger.log(`API服务已启动：http://localhost:7000/api`);
-  Logger.log(`API文档： http://localhost:7000/docs`);
+  Logger.log(`API服务已启动：http://localhost:6868/api`);
+  Logger.log(`API文档： http://localhost:6868/docs`);
 });
