@@ -18,6 +18,13 @@ class WordsDto {
 
   @ApiProperty({ description: '文案名称', example: 'poke' })
   id: string;
+
+  @ApiProperty({
+    description: '可选参数：替换文案中的人名',
+    example: '坤坤',
+    required: false,
+  })
+  name?: string;
 }
 
 class WordsReloadDto extends WordsDto {
@@ -48,10 +55,16 @@ export class WordsController {
           HttpStatus.NOT_FOUND,
         );
       }
+
       const randomIndex = Math.floor(Math.random() * texts.length);
-      return texts[randomIndex];
+      let text = texts[randomIndex];
+      if (dto.name) {
+        text = text.replace(/真寻/g, dto.name);
+      }
+
+      return text;
     } catch (e) {
-      this.logger.error(`getText 失败: ${e?.message}`);
+      this.logger.error(`getText 失败: ${e}`);
       throw new HttpException('服务器错误', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
@@ -72,7 +85,7 @@ export class WordsController {
         throw new HttpException('重载失败..', HttpStatus.BAD_REQUEST);
       }
     } catch (e) {
-      this.logger.error(`reloadWord 失败: ${e?.message}`);
+      this.logger.error(`reloadWord 失败: ${e}`);
       throw new HttpException('服务器错误', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
