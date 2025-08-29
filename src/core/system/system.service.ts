@@ -9,6 +9,7 @@ import * as process from 'node:process';
 export class SystemService {
   private readonly logger = new Logger(SystemService.name);
   private readonly restartFile: string;
+  private readonly checkIntervalMs = 60 * 60 * 1000; // 1小时
 
   constructor(
     @Inject(PathService)
@@ -20,6 +21,8 @@ export class SystemService {
       this.pathService.get('temp'),
       'restart.timestamp',
     );
+
+    this.startAutoCheckUpdate();
   }
 
   /**
@@ -59,10 +62,24 @@ export class SystemService {
    * 检查更新
    */
   async checkUpdate(): Promise<void> {
+    this.logger.debug('检查系统代码更新..');
     const updated = await this.autoUpdateService.checkForUpdates();
     if (updated) {
       this.logger.warn('系统代码已更新，正在重启..');
       process.exit(1);
     }
+  }
+
+  /**
+   * 启动定时检查更新任务
+   */
+  private startAutoCheckUpdate() {
+    setInterval(async () => {
+      try {
+        await this.checkUpdate();
+      } catch (e) {
+        this.logger.error(`定时检查更新失败: ${e?.message}`);
+      }
+    }, this.checkIntervalMs);
   }
 }
