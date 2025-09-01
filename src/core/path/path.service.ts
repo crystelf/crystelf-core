@@ -28,6 +28,8 @@ export class PathService {
       package: path.join(this.baseDir, 'package.json'),
       modules: path.join(this.baseDir, 'src/modules'),
       words: path.join(this.baseDir, 'private/words/src'),
+      private: path.join(this.baseDir, 'private'),
+      meme: path.join(this.baseDir, 'private/meme'),
     };
 
     return type ? mappings[type] : this.baseDir;
@@ -45,6 +47,7 @@ export class PathService {
       this.get('temp'),
       this.get('public'),
       this.get('words'),
+      this.get('meme'),
     ];
 
     pathsToInit.forEach((dirPath) => {
@@ -105,5 +108,7 @@ export type PathType =
   | 'temp'
   | 'userData'
   | 'package'
+  | 'meme'
   | 'modules'
+  | 'private'
   | 'words';

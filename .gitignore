@@ -2,6 +2,10 @@
 /dist
 /node_modules
 /build
+/private
+/public
+/logs
+
 
 # Logs
 logs
