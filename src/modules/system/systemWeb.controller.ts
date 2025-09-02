@@ -32,7 +32,7 @@ export class SystemWebController {
   })
   @UseGuards(TokenAuthGuard)
   @ApiBody({ type: WebServerDto })
-  async systemRestart(@Param('token') token: string): Promise<string> {
+  public async systemRestart(@Param('token') token: string): Promise<string> {
     this.systemService.systemRestart();
     return '核心正在重启..';
   }
@@ -47,7 +47,7 @@ export class SystemWebController {
   })
   @UseGuards(TokenAuthGuard)
   @ApiBody({ type: WebServerDto })
-  async getRestartTime(@Param('token') token: string): Promise<string> {
+  public async getRestartTime(@Param('token') token: string): Promise<string> {
     return await this.systemService.getRestartTime();
   }
 }

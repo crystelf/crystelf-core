@@ -37,7 +37,7 @@ export class SystemService {
   /**
    * 检查重启时间戳
    */
-  checkRestartTime(): number | null {
+  public checkRestartTime(): number | null {
     if (fs.existsSync(this.restartFile)) {
       const prev = Number(fs.readFileSync(this.restartFile, 'utf-8'));
       const duration = ((Date.now() - prev) / 1000 - 5).toFixed(2);
@@ -51,7 +51,7 @@ export class SystemService {
   /**
    * 重启服务
    */
-  async restart(): Promise<void> {
+  public async restart(): Promise<void> {
     this.markRestartTime();
     this.logger.warn('服务即将重启..');
     await new Promise((resolve) => setTimeout(resolve, 300));
@@ -61,7 +61,7 @@ export class SystemService {
   /**
    * 检查更新
    */
-  async checkUpdate(): Promise<void> {
+  public async checkUpdate(): Promise<void> {
     this.logger.debug('检查系统代码更新..');
     const updated = await this.autoUpdateService.checkForUpdates();
     if (updated) {

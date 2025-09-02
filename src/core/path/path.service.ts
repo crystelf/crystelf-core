@@ -17,7 +17,7 @@ export class PathService {
    * 获取预定义路径
    * @param type 路径类型
    */
-  get(type?: PathType): string {
+  public get(type?: PathType): string {
     const mappings: Record<PathType, string> = {
       root: this.baseDir,
       public: path.join(this.baseDir, 'public'),
@@ -64,7 +64,7 @@ export class PathService {
    * @param targetPath 目标路径
    * @param includeFile 是否包含文件路径
    */
-  createDir(targetPath: string, includeFile: boolean = false): void {
+  public createDir(targetPath: string, includeFile: boolean = false): void {
     try {
       const dirToCreate = includeFile ? path.dirname(targetPath) : targetPath;
       fs.mkdirSync(dirToCreate, { recursive: true });
@@ -73,30 +73,6 @@ export class PathService {
       this.logger.error(`创建目录失败: ${err}`);
       throw err;
     }
-  }
-
-  /**
-   * 连接路径
-   * @param paths 路径片段
-   */
-  join(...paths: string[]): string {
-    return path.join(...paths);
-  }
-
-  /**
-   * 获取文件扩展名
-   * @param filePath 文件路径
-   */
-  getExtension(filePath: string): string {
-    return path.extname(filePath);
-  }
-
-  /**
-   * 获取文件名（不含扩展名）
-   * @param filePath 文件路径
-   */
-  getBasename(filePath: string): string {
-    return path.basename(filePath, path.extname(filePath));
   }
 }
 

@@ -21,7 +21,7 @@ export class RedisService implements OnModuleInit {
     private readonly Persistence: PersistenceService,
   ) {}
 
-  async onModuleInit() {
+  public async onModuleInit() {
     await this.connectWithRetry();
     this.setupEventListeners();
   }

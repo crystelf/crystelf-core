@@ -17,7 +17,7 @@ export class CdnService {
    * 获取文件
    * @param relativePath 文件相对路径
    */
-  async getFile(relativePath: string): Promise<string | null> {
+  public async getFile(relativePath: string): Promise<string | null> {
     if (!this.filePath) this.filePath = this.paths.get('public');
     if (
       !this.isValidPath(relativePath) &&

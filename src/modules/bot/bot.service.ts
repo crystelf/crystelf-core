@@ -24,7 +24,7 @@ export class BotService {
   /**
    * 获取botId数组
    */
-  async getBotId(): Promise<{ uin: number; nickName: string }[]> {
+  public async getBotId(): Promise<{ uin: number; nickName: string }[]> {
     this.logger.debug('正在请求获取在线的bot..');
     const userPath = this.paths.get('userData');
     const botsPath = path.join(userPath, '/crystelfBots');
@@ -56,7 +56,7 @@ export class BotService {
    * 获取群聊信息
    * @param data
    */
-  async getGroupInfo(data: {
+  public async getGroupInfo(data: {
     botId?: number;
     groupId: number;
     clientId?: string;
@@ -93,7 +93,7 @@ export class BotService {
    * @param groupId 群号
    * @param message 消息
    */
-  async sendMessage(groupId: number, message: string): Promise<boolean> {
+  public async sendMessage(groupId: number, message: string): Promise<boolean> {
     this.logger.log(`发送${message}到${groupId}..`);
     const sendBot = await this.getGroupBot(groupId);
     if (!sendBot) {
@@ -117,7 +117,7 @@ export class BotService {
    * 广播消息
    * @param message 要广播的消息
    */
-  async broadcastToAllGroups(message: string): Promise<void> {
+  public async broadcastToAllGroups(message: string): Promise<void> {
     const userPath = this.paths.get('userData');
     const botsPath = path.join(userPath, '/crystelfBots');
     const dirData = await fs.readdir(botsPath);

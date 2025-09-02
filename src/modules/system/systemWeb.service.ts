@@ -15,7 +15,7 @@ export class SystemWebService {
   /**
    * 重启系统
    */
-  async systemRestart(): Promise<void> {
+  public async systemRestart(): Promise<void> {
     this.logger.debug(`有个小可爱正在请求重启核心..`);
     await this.system.restart();
   }
@@ -23,7 +23,7 @@ export class SystemWebService {
   /**
    * 获取上次重启所耗时间
    */
-  async getRestartTime(): Promise<string> {
+  public async getRestartTime(): Promise<string> {
     this.logger.debug(`有个小可爱想知道核心重启花了多久..`);
     const restartTimePath = path.join(
       this.pathService.get('temp'),

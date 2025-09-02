@@ -19,7 +19,7 @@ export class TokenAuthGuard implements CanActivate {
     @Inject(ToolsService) private readonly toolsService: ToolsService,
   ) {}
 
-  canActivate(context: ExecutionContext): boolean {
+  public canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest();
     const token = request.body?.token || request.headers['x-token']; //两种传入方式
 

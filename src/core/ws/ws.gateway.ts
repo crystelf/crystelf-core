@@ -43,7 +43,7 @@ export class WsGateway implements OnGatewayConnection, OnGatewayDisconnect {
    * @param client 客户端
    * @param req
    */
-  async handleConnection(client: AuthenticatedSocket, req: any) {
+  public async handleConnection(client: AuthenticatedSocket, req: any) {
     const ip = req.socket.remoteAddress || 'unknown';
     this.logger.log(`收到来自 ${ip} 的 WebSocket 连接请求..`);
 
@@ -67,7 +67,7 @@ export class WsGateway implements OnGatewayConnection, OnGatewayDisconnect {
    * 断开某个连接
    * @param client 客户端
    */
-  async handleDisconnect(client: AuthenticatedSocket) {
+  public async handleDisconnect(client: AuthenticatedSocket) {
     if (client.heartbeat) clearInterval(client.heartbeat);
     if (client.clientId) {
       this.wsClientManager.remove(client.clientId);

@@ -46,7 +46,7 @@ export class WordsController {
   @Post('getText')
   @ApiOperation({ summary: '获取随机文案' })
   @ApiBody({ type: WordsDto })
-  async getText(@Body() dto: WordsDto) {
+  public async getText(@Body() dto: WordsDto) {
     try {
       const texts = await this.wordsService.loadWord(dto.type, dto.id);
       if (!texts || texts.length === 0) {
@@ -76,7 +76,7 @@ export class WordsController {
   @ApiOperation({ summary: '重载某条文案' })
   @UseGuards(TokenAuthGuard)
   @ApiBody({ type: WordsReloadDto })
-  async reloadWord(@Body() dto: WordsReloadDto) {
+  public async reloadWord(@Body() dto: WordsReloadDto) {
     try {
       const success = await this.wordsService.reloadWord(dto.type, dto.id);
       if (success) {

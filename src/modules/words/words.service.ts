@@ -47,7 +47,7 @@ export class WordsService {
   /**
    * 从本地加载文案到内存
    */
-  async loadWord(type: string, name: string): Promise<string[] | null> {
+  public async loadWord(type: string, name: string): Promise<string[] | null> {
     const cacheKey = `${type}/${name}`;
     this.logger.log(`加载文案 ${cacheKey}..`);
     if (this.wordCache[cacheKey]) return this.wordCache[cacheKey];
@@ -71,7 +71,7 @@ export class WordsService {
   /**
    * 重载文案
    */
-  async reloadWord(type: string, name: string): Promise<boolean> {
+  public async reloadWord(type: string, name: string): Promise<boolean> {
     const cacheKey = `${type}/${name}`;
     this.logger.log(`重载文案: ${cacheKey}..`);
     const filePath = path.join(this.paths.get('words'), type, `${name}.json`);

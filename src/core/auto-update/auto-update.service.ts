@@ -21,14 +21,14 @@ export class AutoUpdateService {
   /**
    * 检查主仓库远程更新
    */
-  async checkForUpdates(): Promise<boolean> {
+  public async checkForUpdates(): Promise<boolean> {
     return this.checkRepoForUpdates(this.repoPath, 'crystelf-core');
   }
 
   /**
    * 检查指定文件夹的更新
    */
-  async checkRepoForUpdates(
+  public async checkRepoForUpdates(
     folderPath: string,
     label = '子仓库',
   ): Promise<boolean> {

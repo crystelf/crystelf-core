@@ -16,7 +16,7 @@ export class FilesService {
    * @param targetPath 目标路径
    * @param includeFile 是否包含文件路径
    */
-  async createDir(targetPath = '', includeFile = false): Promise<void> {
+  public async createDir(targetPath = '', includeFile = false): Promise<void> {
     const root = this.paths.get('root');
     try {
       const dirToCreate = path.isAbsolute(targetPath)

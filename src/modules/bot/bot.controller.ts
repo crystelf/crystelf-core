@@ -23,7 +23,7 @@ export class BotController {
   @Post('getBotId')
   @UseGuards(TokenAuthGuard)
   @ApiOperation({ summary: '获取当前连接到核心的全部 botId 数组' })
-  async postBotsId(@Body() dto: TokenDto) {
+  public async postBotsId(@Body() dto: TokenDto) {
     return this.botService.getBotId();
   }
 
@@ -31,14 +31,14 @@ export class BotController {
   @UseGuards(TokenAuthGuard)
   @ApiOperation({ summary: '获取群聊信息' })
   @ApiBody({ type: GroupInfoDto })
-  async postGroupInfo(@Body() dto: GroupInfoDto) {
+  public async postGroupInfo(@Body() dto: GroupInfoDto) {
     return this.botService.getGroupInfo({ groupId: dto.groupId });
   }
 
   @Post('reportBots')
   @UseGuards(TokenAuthGuard)
   @ApiOperation({ summary: '广播：要求同步群聊信息和 bot 连接情况' })
-  async reportBots(@Body() dto: TokenDto) {
+  public async reportBots(@Body() dto: TokenDto) {
     const sendMessage = {
       type: 'reportBots',
       data: {},
@@ -51,7 +51,7 @@ export class BotController {
   @UseGuards(TokenAuthGuard)
   @ApiOperation({ summary: '发送消息到群聊', description: '自动选择bot发送' })
   @ApiBody({ type: SendMessageDto })
-  async sendMessage(@Body() dto: SendMessageDto) {
+  public async sendMessage(@Body() dto: SendMessageDto) {
     const flag = await this.botService.sendMessage(dto.groupId, dto.message);
     if (!flag) {
       return { message: '消息发送失败' };
@@ -63,7 +63,7 @@ export class BotController {
   @UseGuards(TokenAuthGuard)
   @ApiOperation({ summary: '广播消息到全部群聊', description: '随机延迟' })
   @ApiBody({ type: BroadcastDto })
-  async smartBroadcast(@Body() dto: BroadcastDto) {
+  public async smartBroadcast(@Body() dto: BroadcastDto) {
     await this.botService.broadcastToAllGroups(dto.message);
     return { message: '广播任务已开始，正在后台执行..' };
   }

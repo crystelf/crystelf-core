@@ -19,7 +19,7 @@ export class ToolsService {
    * @param operation
    * @param options
    */
-  async retry<T>(
+  public async retry<T>(
     operation: () => Promise<T>,
     options: RetryOptions,
   ): Promise<T> {
@@ -47,14 +47,14 @@ export class ToolsService {
   /**
    * 从一个可迭代列表中随机选择一个对象
    */
-  getRandomItem<T>(list: T[]): T {
+  public getRandomItem<T>(list: T[]): T {
     return list[Math.floor(Math.random() * list.length)];
   }
 
   /**
    * 获取随机数
    */
-  getRandomDelay(min: number, max: number): number {
+  public getRandomDelay(min: number, max: number): number {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
@@ -62,7 +62,7 @@ export class ToolsService {
    * 检查 token 是否有效
    * @param token 待验证的 token
    */
-  checkToken(token: string): boolean {
+  public checkToken(token: string): boolean {
     const expected = this.config.get<string>('TOKEN');
     if (!expected) {
       this.logger.error('环境变量 TOKEN 未配置，无法进行验证！');
@@ -75,7 +75,7 @@ export class ToolsService {
    * token 验证失败时的逻辑
    * @param token 无效的 token
    */
-  tokenCheckFailed(token: string): never {
+  public tokenCheckFailed(token: string): never {
     this.logger.warn(`有个小可爱使用了错误的 token: ${JSON.stringify(token)}`);
     throw new UnauthorizedException('token 验证失败..');
   }

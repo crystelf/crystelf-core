@@ -17,7 +17,7 @@ export class WsMessageHandler {
     this.logger.log(`已注册 ${handlers.length} 个 WS handler`);
   }
 
-  async handle(socket: AuthenticatedSocket, clientId: string, msg: any) {
+  public async handle(socket: AuthenticatedSocket, clientId: string, msg: any) {
     try {
       // 如果是 pendingRequests 的回包
       if (

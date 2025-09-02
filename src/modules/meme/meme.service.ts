@@ -14,7 +14,7 @@ export class MemeService {
    * @param character 角色
    * @param status 状态
    */
-  async getRandomMemePath(
+  public async getRandomMemePath(
     character?: string,
     status?: string,
   ): Promise<string | null> {

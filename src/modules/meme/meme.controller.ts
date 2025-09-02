@@ -31,7 +31,10 @@ export class MemeController {
   @Post('getRandom')
   @ApiOperation({ summary: '获取随机表情包' })
   @ApiBody({ type: MemeRequestDto })
-  async getRandomMeme(@Body() dto: MemeRequestDto, @Res() res: Response) {
+  public async getRandomMeme(
+    @Body() dto: MemeRequestDto,
+    @Res() res: Response,
+  ) {
     try {
       const memePath = await this.memeService.getRandomMemePath(
         dto.character,
