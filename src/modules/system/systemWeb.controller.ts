@@ -1,7 +1,6 @@
 import { Controller, Post, Inject, UseGuards, Param } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBody, ApiProperty } from '@nestjs/swagger';
 import { SystemWebService } from './systemWeb.service';
-import { ToolsService } from '../../core/tools/tools.service';
 import { TokenAuthGuard } from '../../core/tools/token-auth.guard';
 
 class WebServerDto {
@@ -18,8 +17,6 @@ export class SystemWebController {
   constructor(
     @Inject(SystemWebService)
     private readonly systemService: SystemWebService,
-    @Inject(ToolsService)
-    private readonly toolService: ToolsService,
   ) {}
 
   /**

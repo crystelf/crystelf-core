@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 import { SystemWebController } from './systemWeb.controller';
 import { SystemWebService } from './systemWeb.service';
-import { ToolsModule } from '../../core/tools/tools.module';
 import { PathModule } from '../../core/path/path.module';
 import { SystemModule } from '../../core/system/system.module';
+import { ToolsModule } from '../../core/tools/tools.module';
 
 @Module({
-  imports: [ToolsModule, SystemModule, PathModule],
+  imports: [SystemModule, PathModule, ToolsModule],
   controllers: [SystemWebController],
   providers: [SystemWebService],
 })
