@@ -2,12 +2,35 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import { PathService } from '../../core/path/path.service';
+import { AutoUpdateService } from '../../core/auto-update/auto-update.service';
 
 @Injectable()
 export class MemeService {
   private readonly logger = new Logger(MemeService.name);
+  private readonly updateMs = 15 * 60 * 1000; // 15min
 
-  constructor(@Inject(PathService) private readonly pathService: PathService) {}
+  constructor(
+    @Inject(PathService)
+    private readonly pathService: PathService,
+    @Inject(AutoUpdateService)
+    private readonly autoUpdateService: AutoUpdateService,
+  ) {
+    this.startAutoUpdate();
+  }
+
+  private startAutoUpdate() {
+    setInterval(async () => {
+      const memePath = this.pathService.get('meme');
+      this.logger.log('定时检查表情仓库更新..');
+      const updated = await this.autoUpdateService.checkRepoForUpdates(
+        memePath,
+        'meme 仓库',
+      );
+      if (updated) {
+        this.logger.log('表情仓库已更新..');
+      }
+    }, this.updateMs);
+  }
 
   /**
    * 获取表情路径
@@ -18,7 +41,7 @@ export class MemeService {
     character?: string,
     status?: string,
   ): Promise<string | null> {
-    const baseDir = path.join(this.pathService.get('private'), 'meme');
+    const baseDir = path.join(this.pathService.get('meme'));
 
     try {
       if (!character) {

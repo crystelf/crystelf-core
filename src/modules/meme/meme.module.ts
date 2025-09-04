@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { MemeService } from './meme.service';
 import { MemeController } from './meme.controller';
-import { PathService } from '../../core/path/path.service';
 import { PathModule } from '../../core/path/path.module';
+import { AutoUpdateModule } from '../../core/auto-update/auto-update.module';
 
 @Module({
-  imports: [PathModule],
+  imports: [PathModule, AutoUpdateModule],
   providers: [MemeService],
   controllers: [MemeController],
 })

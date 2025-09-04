@@ -29,7 +29,7 @@ export class PathService {
       modules: path.join(this.baseDir, 'src/modules'),
       words: path.join(this.baseDir, 'private/words/src'),
       private: path.join(this.baseDir, 'private'),
-      meme: path.join(this.baseDir, 'private/meme'),
+      meme: path.join(this.baseDir, 'private/meme/src'),
     };
 
     return type ? mappings[type] : this.baseDir;
