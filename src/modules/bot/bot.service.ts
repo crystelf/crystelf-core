@@ -179,7 +179,7 @@ export class BotService {
           },
         };
         this.logger.log(
-          `[广播] 向群 ${groupId} 使用Bot ${selectedBotId}（客户端 ${selectedClientId}）发送消息${message}，延迟 ${
+          `[广播] 向群 ${groupId} 使用Bot ${selectedBotId}（客户端 ${selectedClientId}）发送消息${message},延迟 ${
             delay / 1000
           } 秒`,
         );

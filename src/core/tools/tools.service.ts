@@ -65,8 +65,8 @@ export class ToolsService {
   public checkToken(token: string): boolean {
     const expected = this.config.get<string>('TOKEN');
     if (!expected) {
-      this.logger.error('环境变量 TOKEN 未配置，无法进行验证！');
-      throw new UnauthorizedException('系统配置错误，缺少 TOKEN');
+      this.logger.error('环境变量 TOKEN 未配置,无法进行验证!');
+      throw new UnauthorizedException('系统配置错误,缺少 TOKEN');
     }
     return token === expected;
   }

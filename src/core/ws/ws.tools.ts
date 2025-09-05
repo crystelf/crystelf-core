@@ -6,7 +6,7 @@ export class WsTools {
 
   static async send(socket: WebSocket, data: unknown): Promise<boolean> {
     if (socket.readyState !== 1) {
-      this.logger.warn('尝试向非 OPEN 状态的 socket 发送消息，已丢弃');
+      this.logger.warn('尝试向非 OPEN 状态的 socket 发送消息,已丢弃');
       return false;
     }
 

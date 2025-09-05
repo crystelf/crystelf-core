@@ -39,7 +39,7 @@ export class WordsService {
         'words 仓库',
       );
       if (updated) {
-        this.logger.log('文案仓库已更新，清理缓存..');
+        this.logger.log('文案仓库已更新,清理缓存..');
         this.wordCache = {};
       }
     }, this.updateMs);

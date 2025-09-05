@@ -25,7 +25,7 @@ export class AppConfigService implements OnModuleInit {
       if (defaultValue !== undefined) {
         return defaultValue;
       }
-      this.logger.error(`环境变量 ${key} 未定义！`);
+      this.logger.error(`环境变量 ${key} 未定义!`);
     }
     return value;
   }

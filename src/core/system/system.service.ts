@@ -42,7 +42,7 @@ export class SystemService {
       const prev = Number(fs.readFileSync(this.restartFile, 'utf-8'));
       const duration = ((Date.now() - prev) / 1000 - 5).toFixed(2);
       fs.unlinkSync(this.restartFile);
-      this.logger.debug(`检测到重启，耗时: ${duration}秒`);
+      this.logger.debug(`检测到重启,耗时: ${duration}秒`);
       return Number(duration);
     }
     return null;
@@ -65,7 +65,7 @@ export class SystemService {
     this.logger.debug('检查系统代码更新..');
     const updated = await this.autoUpdateService.checkForUpdates();
     if (updated) {
-      this.logger.warn('系统代码已更新，正在重启..');
+      this.logger.warn('系统代码已更新,正在重启..');
       process.exit(1);
     }
   }

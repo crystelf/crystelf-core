@@ -65,6 +65,6 @@ export class BotController {
   @ApiBody({ type: BroadcastDto })
   public async smartBroadcast(@Body() dto: BroadcastDto) {
     await this.botService.broadcastToAllGroups(dto.message);
-    return { message: '广播任务已开始，正在后台执行..' };
+    return { message: '广播任务已开始,正在后台执行..' };
   }
 }

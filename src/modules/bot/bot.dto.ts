@@ -18,7 +18,7 @@ export class SendMessageDto extends GroupInfoDto {
 export class BroadcastDto extends TokenDto {
   @ApiProperty({
     description: '要广播的消息',
-    example: '全体目光向我看齐！我宣布个事儿..',
+    example: '全体目光向我看齐!我宣布个事儿..',
   })
   message: string;
 }

@@ -16,10 +16,10 @@ async function bootstrap() {
   if (!fs.existsSync(envPath)) {
     if (fs.existsSync(envExamplePath)) {
       fs.copyFileSync(envExamplePath, envPath);
-      Logger.warn(`.env 文件已自动生成，请修改配置后重启核心..`, '', 'ENV');
+      Logger.warn(`.env 文件已自动生成,请修改配置后重启核心..`, '', 'ENV');
       process.exit(1);
     } else {
-      Logger.error('配置模块初始化出错，请重新拉取应用!', '', 'ENV');
+      Logger.error('配置模块初始化出错,请重新拉取应用!', '', 'ENV');
       process.exit(1);
     }
   }
@@ -39,7 +39,7 @@ async function bootstrap() {
   const systemService = app.get(SystemService);
   const restartDuration = systemService.checkRestartTime();
   if (restartDuration) {
-    Logger.warn(`重启完成！耗时 ${restartDuration} 秒`, '', 'System');
+    Logger.warn(`重启完成!耗时 ${restartDuration} 秒`, '', 'System');
   }
   const config = new DocumentBuilder()
     .setTitle('晶灵核心')

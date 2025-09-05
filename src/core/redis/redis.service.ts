@@ -178,8 +178,29 @@ export class RedisService implements OnModuleInit {
     await this.Persistence.writeDataLocal(key, data, fileName);
   }
 
-  public async test(): Promise<void> {
-    const user = await this.fetch<IUser>('Jerry', 'IUser');
-    this.logger.debug('User:', user);
+  /**
+   * 增加某个 IP 的流量计数
+   * @param ip IP 地址
+   * @param bytes 本次传输的字节数
+   * @param window 窗口秒数
+   */
+  public async incrementIpTraffic(
+    ip: string,
+    bytes: number,
+    window = 1,
+  ): Promise<number> {
+    const key = `traffic:${ip}`;
+    const total = await this.client.incrby(key, bytes);
+    await this.client.expire(key, window);
+    return total;
+  }
+
+  /**
+   * 获取某个 IP 当前窗口的流量
+   */
+  public async getIpTraffic(ip: string): Promise<number> {
+    const key = `traffic:${ip}`;
+    const value = await this.client.get(key);
+    return value ? parseInt(value, 10) : 0;
   }
 }

@@ -26,7 +26,7 @@ export class CdnController {
       const filePath = await this.fileService.getFile(relativePath);
       if (!filePath) {
         this.logger.warn(`${relativePath}：文件不存在..`);
-        throw new HttpException('文件不存在啦！', HttpStatus.NOT_FOUND);
+        throw new HttpException('文件不存在啦!', HttpStatus.NOT_FOUND);
       }
 
       res.sendFile(filePath, (err) => {
