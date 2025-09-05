@@ -31,6 +31,7 @@ export class WordsService {
 
   private startAutoUpdate() {
     setInterval(async () => {
+      //const wordsPath = path.join(this.paths.get('words'),'..'); TODO 需确认检查src更新是否影响正常运行
       const wordsPath = this.paths.get('words');
       this.logger.log('定时检查文案仓库更新..');
       const updated = await this.autoUpdateService.checkRepoForUpdates(
