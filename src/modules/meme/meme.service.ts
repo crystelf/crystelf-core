@@ -20,8 +20,8 @@ export class MemeService {
 
   private startAutoUpdate() {
     setInterval(async () => {
-      const memePath = this.pathService.get('meme');
-      //const memePath = path.join(this.pathService.get('meme'),'..'); TODO 需确认检查src更新是否影响正常运行
+      //const memePath = this.pathService.get('meme');
+      const memePath = path.join(this.pathService.get('meme'), '..');
       this.logger.log('定时检查表情仓库更新..');
       const updated = await this.autoUpdateService.checkRepoForUpdates(
         memePath,
