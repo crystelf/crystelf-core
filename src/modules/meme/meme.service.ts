@@ -62,6 +62,8 @@ export class MemeService {
 
   /**
    * 从目录中随机获取一张图片
+   * @param dir 绝对目录
+   * @private
    */
   private async getRandomFileFromDir(dir: string): Promise<string | null> {
     try {
