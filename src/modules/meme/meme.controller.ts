@@ -1,7 +1,9 @@
 import {
   Controller,
   Post,
+  Get,
   Body,
+  Query,
   Res,
   HttpException,
   HttpStatus,
@@ -9,7 +11,7 @@ import {
   Inject,
   Ip,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBody, ApiProperty } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBody, ApiQuery } from '@nestjs/swagger';
 import { MemeService } from './meme.service';
 import { Response } from 'express';
 import * as fs from 'fs';
@@ -18,17 +20,8 @@ import { ToolsService } from '../../core/tools/tools.service';
 import { RedisService } from '../../core/redis/redis.service';
 
 class MemeRequestDto {
-  @ApiProperty({ description: '角色名称', example: 'zhenxun', required: false })
   character?: string;
-
-  @ApiProperty({ description: '状态', example: 'happy', required: false })
   status?: string;
-
-  @ApiProperty({
-    description: '可选访问令牌',
-    example: 'token',
-    required: false,
-  })
   token?: string;
 }
 
@@ -46,13 +39,46 @@ export class MemeController {
     private readonly redisService: RedisService,
   ) {}
 
-  @Post('getRandom')
+  @Post('get')
   @ApiOperation({ summary: '获取随机表情包' })
+  @ApiQuery({ name: 'character', required: false, description: '角色名称' })
+  @ApiQuery({ name: 'status', required: false, description: '状态' })
+  @ApiQuery({ name: 'token', required: false, description: '可选访问令牌' })
   @ApiBody({ type: MemeRequestDto })
-  public async getRandomMeme(
+  public async getRandomMemePost(
     @Body() dto: MemeRequestDto,
     @Res() res: Response,
     @Ip() ip: string,
+  ) {
+    return this.handleMemeRequest(dto, res, ip, 'POST');
+  }
+
+  @Get()
+  @ApiOperation({ summary: '获取随机表情包' })
+  @ApiQuery({ name: 'character', required: false, description: '角色名称' })
+  @ApiQuery({ name: 'status', required: false, description: '状态' })
+  @ApiQuery({ name: 'token', required: false, description: '可选访问令牌' })
+  public async getRandomMemeGet(
+    @Query() query: MemeRequestDto,
+    @Res() res: Response,
+    @Ip() ip: string,
+  ) {
+    return this.handleMemeRequest(query, res, ip, 'GET');
+  }
+
+  /**
+   * 处理请求
+   * @param dto
+   * @param res
+   * @param ip
+   * @param method
+   * @private
+   */
+  private async handleMemeRequest(
+    dto: MemeRequestDto,
+    res: Response,
+    ip: string,
+    method: string,
   ) {
     try {
       const realToken = dto.token;
@@ -88,7 +114,7 @@ export class MemeController {
       });
 
       if (hasValidToken) {
-        this.logger.log(`有token入不限速: ${memePath}`);
+        this.logger.log(`[${method}] 有token的入不限速 => ${memePath}`);
         stream.pipe(res);
       } else {
         stream.on('data', async (chunk) => {
@@ -99,14 +125,14 @@ export class MemeController {
             1,
           );
           if (total > 100 * 1024) {
-            this.logger.warn(`IP ${ip} 超过速率限制,断开连接..`);
+            this.logger.warn(`[${method}]${ip} 超过速率限制,断开连接..`);
             stream.destroy();
             res.end();
           }
         });
 
         const throttle = new Throttle({ rate: 100 * 1024 });
-        this.logger.log(`白嫖的入限速!(${ip}) => ${memePath}`);
+        this.logger.log(`[${method}] 白嫖入限速! (${ip}) => ${memePath}`);
         stream.pipe(throttle).pipe(res);
       }
     } catch (e) {
