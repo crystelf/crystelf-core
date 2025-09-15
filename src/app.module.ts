@@ -13,6 +13,7 @@ import { BotModule } from './modules/bot/bot.module';
 import { CdnModule } from './modules/cdn/cdn.module';
 import { WordsModule } from './modules/words/words.module';
 import { MemeModule } from './modules/meme/meme.module';
+import { OpenListModule } from './core/openlist/openlist.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { MemeModule } from './modules/meme/meme.module';
     CdnModule,
     WordsModule,
     MemeModule,
+    OpenListModule,
   ],
 })
 export class AppModule {}
