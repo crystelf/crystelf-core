@@ -1,6 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { AppConfigService } from '../../config/config.service';
-import { DirectoryList, FileInfo, UserInfo } from './openlist.types';
+import { FileInfo, FsList } from './openlist.types';
 import { OpenListUtils } from './openlist.utils';
 import * as moment from 'moment';
 
@@ -65,28 +65,11 @@ export class OpenListService {
   }
 
   /**
-   * 获取当前用户信息
-   * @returns 用户信息
-   */
-  public async getUserInfo(): Promise<UserInfo> {
-    try {
-      const token = await this.fetchToken(
-        <string>this.configService.get('OPENLIST_API_BASE_USERNAME'),
-        <string>this.configService.get('OPENLIST_API_BASE_PASSWORD'),
-      );
-      return await OpenListUtils.getUserInfo(token);
-    } catch (error) {
-      this.logger.error('获取用户信息失败:', error);
-      throw new Error('获取用户信息失败');
-    }
-  }
-
-  /**
    * 列出目录下的所有文件
    * @param path 目录路径
    * @returns 目录下的文件列表
    */
-  public async listFiles(path: string): Promise<DirectoryList[]> {
+  public async listFiles(path: string): Promise<FsList> {
     try {
       const token = await this.fetchToken(
         <string>this.configService.get('OPENLIST_API_BASE_USERNAME'),
@@ -142,14 +125,19 @@ export class OpenListService {
    * 上传文件
    * @param filePath 上传路径
    * @param file 文件
+   * @param filePathOnserver 服务器路径
    */
-  public async uploadFile(filePath: string, file: any): Promise<void> {
+  public async uploadFile(
+    filePath: string,
+    file: any,
+    filePathOnserver: string,
+  ): Promise<void> {
     try {
       const token = await this.fetchToken(
         <string>this.configService.get('OPENLIST_API_BASE_USERNAME'),
         <string>this.configService.get('OPENLIST_API_BASE_PASSWORD'),
       );
-      await OpenListUtils.uploadFile(token, filePath, file);
+      await OpenListUtils.uploadFile(token, filePath, filePathOnserver, file);
     } catch (error) {
       this.logger.error('上传文件失败:', error);
       throw new Error('上传文件失败');
