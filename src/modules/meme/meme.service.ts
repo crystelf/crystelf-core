@@ -2,7 +2,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import { PathService } from '../../core/path/path.service';
-import { AutoUpdateService } from '../../core/auto-update/auto-update.service';
+import { OpenListService } from '../../core/openlist/openlist.service';
 
 @Injectable()
 export class MemeService {
@@ -12,25 +12,98 @@ export class MemeService {
   constructor(
     @Inject(PathService)
     private readonly pathService: PathService,
-    @Inject(AutoUpdateService)
-    private readonly autoUpdateService: AutoUpdateService,
+    @Inject(OpenListService)
+    private readonly openListService: OpenListService,
   ) {
     this.startAutoUpdate();
   }
 
   private startAutoUpdate() {
     setInterval(async () => {
-      //const memePath = this.pathService.get('meme');
-      const memePath = path.join(this.pathService.get('meme'), '..');
+      const memePath = path.join(this.pathService.get('meme'));
       this.logger.log('定时检查表情仓库更新..');
-      const updated = await this.autoUpdateService.checkRepoForUpdates(
-        memePath,
-        'meme 仓库',
-      );
-      if (updated) {
-        this.logger.log('表情仓库已更新..');
+      try {
+        const remoteFiles = await this.openListService.listFiles(memePath);
+        if (remoteFiles.code === 200) {
+          const remoteFileList = remoteFiles.data.content;
+          const localFiles = await this.getLocalFileList(memePath);
+          await this.compareAndDownloadFiles(
+            memePath,
+            localFiles,
+            remoteFileList,
+          );
+        } else {
+          this.logger.error('获取远程表情仓库文件失败..');
+        }
+      } catch (error) {
+        this.logger.error('定时检查表情仓库更新失败..', error);
       }
     }, this.updateMs);
+  }
+
+  /**
+   * 获取本地目录的文件列表
+   * @param dir 本地路径
+   * @private
+   */
+  private async getLocalFileList(dir: string): Promise<string[]> {
+    const files: string[] = []; //文件
+    const dirs: string[] = []; //目录
+    try {
+      const entries = await fs.readdir(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          dirs.push(fullPath);
+        } else if (/\.(jpg|jpeg|png|gif|webp)$/i.test(entry.name)) {
+          files.push(fullPath);
+        }
+      }
+      for (const subDir of dirs) {
+        const subFiles = await this.getLocalFileList(subDir);
+        files.push(...subFiles);
+      }
+    } catch (error) {
+      this.logger.error(`读取本地目录失败: ${dir}`, error);
+    }
+    return files;
+  }
+
+  /**
+   * 比较本地文件和远程文件,并下载缺失的文件
+   * @param localPath 本地路径
+   * @param localFiles 本地文件列表
+   * @param remoteFiles 远程文件列表
+   * @private
+   */
+  private async compareAndDownloadFiles(
+    localPath: string,
+    localFiles: string[],
+    remoteFiles: any[],
+  ) {
+    for (const remoteFile of remoteFiles) {
+      const remoteFilePath = path.join(localPath, remoteFile.name);
+      if (remoteFile.is_dir) {
+        await fs.mkdir(remoteFilePath, { recursive: true });
+        this.logger.log(`文件夹已创建: ${remoteFile.name}`);
+        await this.compareAndDownloadFiles(
+          remoteFilePath,
+          [],
+          remoteFile.content,
+        );
+      } else if (!localFiles.includes(remoteFilePath)) {
+        this.logger.log(`文件缺失: ${remoteFile.name}，开始下载..`);
+        try {
+          await this.openListService.downloadFile(
+            remoteFile.raw_url,
+            remoteFilePath,
+          );
+          this.logger.log(`文件下载成功: ${remoteFile.name}`);
+        } catch (error) {
+          this.logger.error(`下载文件失败: ${remoteFile.name}`, error);
+        }
+      }
+    }
   }
 
   /**
