@@ -36,7 +36,7 @@ export class AppConfigService implements OnModuleInit {
    * 检查并补全 .env 文件
    */
   private checkAndSyncEnv(): void {
-    this.logger.log('检查并同步 .env 与 .env.example ...');
+    this.logger.log('检查并同步 .env 与 .envExample ...');
 
     if (!fs.existsSync(this.envExamplePath)) {
       this.logger.error(`缺少 ${this.envExamplePath} 文件，无法校验`);
@@ -67,7 +67,7 @@ export class AppConfigService implements OnModuleInit {
       });
       this.logger.log('.env 已自动补全缺失项');
     } else {
-      this.logger.log('.env 已与 .env.example 保持一致');
+      this.logger.log('.env 已与 .envExample 保持一致');
     }
   }
 

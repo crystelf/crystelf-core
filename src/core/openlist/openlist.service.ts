@@ -66,7 +66,7 @@ export class OpenListService {
 
   /**
    * 列出目录下的所有文件
-   * @param path 目录路径
+   * @param path 服务器目录路径
    * @returns 目录下的文件列表
    */
   public async listFiles(path: string): Promise<FsList> {

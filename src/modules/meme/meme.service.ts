@@ -3,17 +3,20 @@ import * as path from 'path';
 import * as fs from 'fs/promises';
 import { PathService } from '../../core/path/path.service';
 import { OpenListService } from '../../core/openlist/openlist.service';
+import { AppConfigService } from '../../config/config.service';
 
 @Injectable()
 export class MemeService {
   private readonly logger = new Logger(MemeService.name);
-  private readonly updateMs = 15 * 60 * 1000; // 15min
+  private readonly updateMs = 1 * 60 * 1000; // 15min
 
   constructor(
     @Inject(PathService)
     private readonly pathService: PathService,
     @Inject(OpenListService)
     private readonly openListService: OpenListService,
+    @Inject(AppConfigService)
+    private readonly configService: AppConfigService,
   ) {
     this.startAutoUpdate();
   }
@@ -21,22 +24,29 @@ export class MemeService {
   private startAutoUpdate() {
     setInterval(async () => {
       const memePath = path.join(this.pathService.get('meme'));
-      this.logger.log('定时检查表情仓库更新..');
-      try {
-        const remoteFiles = await this.openListService.listFiles(memePath);
-        if (remoteFiles.code === 200) {
-          const remoteFileList = remoteFiles.data.content;
-          const localFiles = await this.getLocalFileList(memePath);
-          await this.compareAndDownloadFiles(
-            memePath,
-            localFiles,
-            remoteFileList,
-          );
-        } else {
-          this.logger.error('获取远程表情仓库文件失败..');
+      const remoteMemePath = this.configService.get('OPENLIST_API_MEME_PATH');
+      if (remoteMemePath) {
+        this.logger.log('定时检查表情仓库更新..');
+        try {
+          const remoteFiles =
+            await this.openListService.listFiles(remoteMemePath);
+          this.logger.debug(remoteFiles);
+          if (remoteFiles.code === 200 && remoteFiles.data.content) {
+            const remoteFileList = remoteFiles.data.content;
+            const localFiles = await this.getLocalFileList(memePath);
+            await this.compareAndDownloadFiles(
+              memePath,
+              localFiles,
+              remoteFileList,
+            );
+          } else {
+            this.logger.error('获取远程表情仓库文件失败..');
+          }
+        } catch (error) {
+          this.logger.error('定时检查表情仓库更新失败..', error);
         }
-      } catch (error) {
-        this.logger.error('定时检查表情仓库更新失败..', error);
+      } else {
+        this.logger.warn('未配置远程表情包地址..');
       }
     }, this.updateMs);
   }

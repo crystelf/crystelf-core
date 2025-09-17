@@ -5,9 +5,16 @@ import { PathModule } from '../../core/path/path.module';
 import { ToolsModule } from '../../core/tools/tools.module';
 import { RedisModule } from '../../core/redis/redis.module';
 import { OpenListModule } from '../../core/openlist/openlist.module';
+import { AppConfigModule } from '../../config/config.module';
 
 @Module({
-  imports: [PathModule, OpenListModule, ToolsModule, RedisModule],
+  imports: [
+    PathModule,
+    OpenListModule,
+    ToolsModule,
+    RedisModule,
+    AppConfigModule,
+  ],
   providers: [MemeService],
   controllers: [MemeController],
 })

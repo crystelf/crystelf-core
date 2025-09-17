@@ -50,10 +50,20 @@ export class OpenListUtils {
   static async listDirectory(token: string, path: string): Promise<FsList> {
     const url = `${this.apiBaseUrl}/api/fs/list`;
     try {
-      const response = await axios.get(url, {
-        params: { path },
-        headers: { Authorization: `Bearer ${token}` },
+      let data = JSON.stringify({
+        path: path,
       });
+      //this.logger.debug(path);
+      let config = {
+        method: 'post',
+        url: `${url}`,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `${token}`,
+        },
+        data: data,
+      };
+      let response = await axios(config);
       this.logger.log(`列出目录${path}成功..`);
       return response.data;
     } catch (error) {
@@ -72,7 +82,7 @@ export class OpenListUtils {
     try {
       const response = await axios.get(url, {
         params: { path: filePath },
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `${token}` },
       });
       this.logger.log('获取文件信息成功..');
       return response.data;

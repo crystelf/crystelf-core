@@ -71,7 +71,6 @@ export class PathService {
       this.logger.debug(`成功创建目录: ${dirToCreate}`);
     } catch (err) {
       this.logger.error(`创建目录失败: ${err}`);
-      throw err;
     }
   }
 }
