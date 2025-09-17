@@ -8,7 +8,7 @@ import { AppConfigService } from '../../config/config.service';
 @Injectable()
 export class MemeService {
   private readonly logger = new Logger(MemeService.name);
-  private readonly updateMs = 150 * 60 * 1000; // 15min
+  private readonly updateMs = 15 * 60 * 1000; // 15min
 
   constructor(
     @Inject(PathService)
@@ -96,19 +96,22 @@ export class MemeService {
   ) {
     for (const remoteFile of remoteFiles) {
       let relativePath = path.relative(remoteMemePath, remoteFile.path);
-      relativePath = relativePath.replace(/D:\\alist\\crystelf\\meme/g, '');
+      //this.logger.debug(`relativePath: ${relativePath}`);
+      let remoteRelativePath = relativePath.replace(/D:\\alist/g, ''); //服务器下载用目录
+      relativePath = relativePath.replace(/D:\\alist\\crystelf\\meme/g, ''); //本地储存用
+      //this.logger.debug(`relativeEdPath: ${relativePath}`);
       const localFilePath = path.join(
         localPath,
         relativePath.replace(/\\/g, '/'),
       );
       if (remoteFile.is_dir) {
         try {
-          const localDirPath = path.dirname(localFilePath);
-          await fs.mkdir(localDirPath, { recursive: true });
-          this.logger.log(`文件夹已创建: ${localDirPath}`);
-          const subRemoteFiles = await this.openListService.listFiles(
-            remoteFile.path,
-          );
+          //const localDirPath = path.dirname(localFilePath);
+          //await fs.mkdir(localDirPath, { recursive: true });
+          //this.logger.log(`文件夹已创建: ${localDirPath}`);
+          //相关逻辑已在oplist工具中处理
+          const subRemoteFiles =
+            await this.openListService.listFiles(remoteRelativePath);
           if (subRemoteFiles.code === 200 && subRemoteFiles.data.content) {
             await this.compareAndDownloadFiles(
               localPath,
@@ -118,19 +121,19 @@ export class MemeService {
             );
           }
         } catch (error) {
-          this.logger.error(`创建文件夹失败: ${remoteFile.path}`, error);
+          this.logger.error(`递归处理文件夹失败: ${localFilePath}`, error);
         }
       } else {
         if (!localFiles.includes(localFilePath)) {
-          this.logger.log(`文件缺失: ${remoteFile.path}, 开始下载..`);
+          this.logger.log(`文件缺失: ${localFilePath}, 开始下载..`);
           try {
             await this.openListService.downloadFile(
-              remoteFile.path,
+              remoteRelativePath,
               localFilePath,
             );
-            this.logger.log(`文件下载成功: ${remoteFile.path}`);
+            this.logger.log(`文件下载成功: ${localFilePath}`);
           } catch (error) {
-            this.logger.error(`下载文件失败: ${remoteFile.path}`, error);
+            this.logger.error(`下载文件失败: ${localFilePath}`, error);
           }
         }
       }

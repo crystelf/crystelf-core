@@ -2,7 +2,9 @@ import axios from 'axios';
 import { AppConfigService } from '../../config/config.service';
 import { Inject, Logger } from '@nestjs/common';
 import * as fs from 'fs';
+import * as fsp from 'fs/promises';
 import { FileInfo, FileUpload, FsList } from './openlist.types';
+import * as path from 'node:path';
 
 export class OpenListUtils {
   private static readonly logger = new Logger(OpenListUtils.name);
@@ -78,12 +80,22 @@ export class OpenListUtils {
    * @param filePath 文件路径
    */
   static async getFileInfo(token: string, filePath: string): Promise<FileInfo> {
-    const url = `${this.apiBaseUrl}/fs/info`;
+    const url = `${this.apiBaseUrl}/api/fs/get`;
     try {
-      const response = await axios.get(url, {
-        params: { path: filePath },
-        headers: { Authorization: `${token}` },
+      let data = JSON.stringify({
+        path: filePath,
       });
+
+      let config = {
+        method: 'post',
+        url: `${url}`,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `${token}`,
+        },
+        data: data,
+      };
+      const response = await axios(config);
       this.logger.log('获取文件信息成功..');
       return response.data;
     } catch (error) {
@@ -105,23 +117,27 @@ export class OpenListUtils {
   ): Promise<void> {
     try {
       const fileInfo = await this.getFileInfo(token, filePath);
+      //this.logger.debug(fileInfo);
       const rawUrl = fileInfo.data.raw_url;
-      this.logger.debug(`rawUrl: ${rawUrl}`);
+      //this.logger.debug(`rawUrl: ${rawUrl}`);
       if (!rawUrl) {
         this.logger.error('文件没有找到 raw_url 地址..');
         throw new Error('文件没有找到 raw_url 地址..');
       }
-      const response = await axios.get(rawUrl, {
-        responseType: 'stream',
-      });
+      const dir = path.dirname(downloadPath);
+      await fsp.mkdir(dir, { recursive: true });
+      const response = await axios.get(rawUrl, { responseType: 'stream' });
       const writer = fs.createWriteStream(downloadPath);
       response.data.pipe(writer);
-      writer.on('finish', () => {
-        this.logger.log(`文件下载成功: ${downloadPath}`);
-      });
-      writer.on('error', (error) => {
-        this.logger.error('下载文件失败', error);
-        throw new Error('下载文件失败..');
+      await new Promise<void>((resolve, reject) => {
+        writer.on('finish', () => {
+          this.logger.log(`文件下载成功: ${downloadPath}`);
+          resolve();
+        });
+        writer.on('error', (error) => {
+          this.logger.error('下载文件失败', error);
+          reject(new Error('下载文件失败..'));
+        });
       });
     } catch (error) {
       this.logger.error('下载文件失败..', error);
@@ -144,7 +160,7 @@ export class OpenListUtils {
   ): Promise<FileUpload> {
     const url = `${this.apiBaseUrl}/api/fs/put`;
     const headers = {
-      Authorization: `Bearer ${token}`,
+      Authorization: `${token}`,
       'Content-Type': 'application/octet-stream',
       'Content-Length': file.bytesRead,
       'File-Path': encodeURIComponent(filePathOnServer),
