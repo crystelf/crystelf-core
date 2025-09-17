@@ -96,11 +96,11 @@ export class OpenListUtils {
         data: data,
       };
       const response = await axios(config);
-      this.logger.log('获取文件信息成功..');
+      this.logger.log(`获取文件信息成功: ${filePath}`);
       return response.data;
     } catch (error) {
-      this.logger.error('获取文件信息失败..', error);
-      throw new Error('获取文件信息失败..');
+      this.logger.error(`获取文件信息失败: ${filePath}`, error);
+      throw new Error(`获取文件信息失败 ${filePath}`);
     }
   }
 
@@ -135,13 +135,13 @@ export class OpenListUtils {
           resolve();
         });
         writer.on('error', (error) => {
-          this.logger.error('下载文件失败', error);
-          reject(new Error('下载文件失败..'));
+          this.logger.error(`下载文件失败: ${filePath}`, error);
+          reject(new Error(`下载文件失败: ${filePath}`));
         });
       });
     } catch (error) {
-      this.logger.error('下载文件失败..', error);
-      throw new Error('下载文件失败..');
+      this.logger.error(`下载文件失败: ${filePath}`, error);
+      throw new Error(`下载文件失败: ${filePath}`);
     }
   }
 
