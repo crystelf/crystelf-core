@@ -8,7 +8,7 @@ import { AppConfigService } from '../../config/config.service';
 @Injectable()
 export class MemeService {
   private readonly logger = new Logger(MemeService.name);
-  private readonly updateMs = 1 * 60 * 1000; // 15min
+  private readonly updateMs = 150 * 60 * 1000; // 15min
 
   constructor(
     @Inject(PathService)
@@ -30,14 +30,15 @@ export class MemeService {
         try {
           const remoteFiles =
             await this.openListService.listFiles(remoteMemePath);
-          this.logger.debug(remoteFiles);
           if (remoteFiles.code === 200 && remoteFiles.data.content) {
-            const remoteFileList = remoteFiles.data.content;
+            let remoteFileList = remoteFiles.data.content;
             const localFiles = await this.getLocalFileList(memePath);
+            //this.logger.debug(localFiles);
             await this.compareAndDownloadFiles(
               memePath,
               localFiles,
               remoteFileList,
+              remoteMemePath,
             );
           } else {
             this.logger.error('获取远程表情仓库文件失败..');
@@ -57,8 +58,8 @@ export class MemeService {
    * @private
    */
   private async getLocalFileList(dir: string): Promise<string[]> {
-    const files: string[] = []; //文件
-    const dirs: string[] = []; //目录
+    const files: string[] = [];
+    const dirs: string[] = [];
     try {
       const entries = await fs.readdir(dir, { withFileTypes: true });
       for (const entry of entries) {
@@ -80,37 +81,57 @@ export class MemeService {
   }
 
   /**
-   * 比较本地文件和远程文件,并下载缺失的文件
+   * 比较本地文件和远程文件 下载缺失的文件
    * @param localPath 本地路径
    * @param localFiles 本地文件列表
    * @param remoteFiles 远程文件列表
+   * @param remoteMemePath 远程基准路径
    * @private
    */
   private async compareAndDownloadFiles(
     localPath: string,
     localFiles: string[],
     remoteFiles: any[],
+    remoteMemePath: string,
   ) {
     for (const remoteFile of remoteFiles) {
-      const remoteFilePath = path.join(localPath, remoteFile.name);
+      let relativePath = path.relative(remoteMemePath, remoteFile.path);
+      relativePath = relativePath.replace(/D:\\alist\\crystelf\\meme/g, '');
+      const localFilePath = path.join(
+        localPath,
+        relativePath.replace(/\\/g, '/'),
+      );
       if (remoteFile.is_dir) {
-        await fs.mkdir(remoteFilePath, { recursive: true });
-        this.logger.log(`文件夹已创建: ${remoteFile.name}`);
-        await this.compareAndDownloadFiles(
-          remoteFilePath,
-          [],
-          remoteFile.content,
-        );
-      } else if (!localFiles.includes(remoteFilePath)) {
-        this.logger.log(`文件缺失: ${remoteFile.name}，开始下载..`);
         try {
-          await this.openListService.downloadFile(
-            remoteFile.raw_url,
-            remoteFilePath,
+          const localDirPath = path.dirname(localFilePath);
+          await fs.mkdir(localDirPath, { recursive: true });
+          this.logger.log(`文件夹已创建: ${localDirPath}`);
+          const subRemoteFiles = await this.openListService.listFiles(
+            remoteFile.path,
           );
-          this.logger.log(`文件下载成功: ${remoteFile.name}`);
+          if (subRemoteFiles.code === 200 && subRemoteFiles.data.content) {
+            await this.compareAndDownloadFiles(
+              localPath,
+              [],
+              subRemoteFiles.data.content,
+              remoteMemePath,
+            );
+          }
         } catch (error) {
-          this.logger.error(`下载文件失败: ${remoteFile.name}`, error);
+          this.logger.error(`创建文件夹失败: ${remoteFile.path}`, error);
+        }
+      } else {
+        if (!localFiles.includes(localFilePath)) {
+          this.logger.log(`文件缺失: ${remoteFile.path}, 开始下载..`);
+          try {
+            await this.openListService.downloadFile(
+              remoteFile.path,
+              localFilePath,
+            );
+            this.logger.log(`文件下载成功: ${remoteFile.path}`);
+          } catch (error) {
+            this.logger.error(`下载文件失败: ${remoteFile.path}`, error);
+          }
         }
       }
     }

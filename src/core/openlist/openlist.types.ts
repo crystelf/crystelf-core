@@ -5,20 +5,18 @@ export interface FsList {
   code: number;
   message: string;
   data: {
-    content:
-      | [
-          name: string,
-          size: number,
-          is_dir: boolean,
-          modified: string, //修改时间
-          sign: string, //签名
-          thumb: string, //略缩图
-          type: number, //类型
-        ]
-      | null;
-    total: number; //总数
-    readme: string; //说明?
-    write: boolean; //是否可写入
+    content: Array<{
+      name: string;
+      size: number;
+      is_dir: boolean;
+      modified: string; // 修改时间
+      sign: string; // 签名
+      thumb: string; // 略缩图
+      type: number; // 类型
+    }> | null; // 可能为空数组
+    total: number; // 总数
+    readme: string; // 说明?
+    write: boolean; // 是否可写入
     provider: string;
     header: string;
   };

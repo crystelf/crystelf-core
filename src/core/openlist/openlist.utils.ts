@@ -106,6 +106,7 @@ export class OpenListUtils {
     try {
       const fileInfo = await this.getFileInfo(token, filePath);
       const rawUrl = fileInfo.data.raw_url;
+      this.logger.debug(`rawUrl: ${rawUrl}`);
       if (!rawUrl) {
         this.logger.error('文件没有找到 raw_url 地址..');
         throw new Error('文件没有找到 raw_url 地址..');
