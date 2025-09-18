@@ -6,6 +6,7 @@ import { ToolsModule } from '../../core/tools/tools.module';
 import { RedisModule } from '../../core/redis/redis.module';
 import { OpenListModule } from '../../core/openlist/openlist.module';
 import { AppConfigModule } from '../../config/config.module';
+import { FilesModule } from '../../core/files/files.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { AppConfigModule } from '../../config/config.module';
     ToolsModule,
     RedisModule,
     AppConfigModule,
+    FilesModule,
   ],
   providers: [MemeService],
   controllers: [MemeController],

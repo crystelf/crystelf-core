@@ -55,7 +55,7 @@ export class OpenListUtils {
       let data = JSON.stringify({
         path: path,
       });
-      //this.logger.debug(path);
+      this.logger.debug(path);
       let config = {
         method: 'post',
         url: `${url}`,
@@ -66,6 +66,7 @@ export class OpenListUtils {
         data: data,
       };
       let response = await axios(config);
+      //this.logger.debug(response);
       this.logger.log(`列出目录${path}成功..`);
       return response.data;
     } catch (error) {
@@ -81,6 +82,7 @@ export class OpenListUtils {
    */
   static async getFileInfo(token: string, filePath: string): Promise<FileInfo> {
     const url = `${this.apiBaseUrl}/api/fs/get`;
+    //this.logger.debug(filePath);
     try {
       let data = JSON.stringify({
         path: filePath,
