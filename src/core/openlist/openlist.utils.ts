@@ -40,7 +40,8 @@ export class OpenListUtils {
       }
     } catch (error) {
       this.logger.error('获取Token失败..', error);
-      throw new Error('获取Token失败..');
+      //throw new Error('获取Token失败..');
+      return 'null';
     }
   }
 
