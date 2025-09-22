@@ -42,31 +42,40 @@ export class FilesService {
    * @param localPath 本地路径
    * @param localFiles 本地文件列表
    * @param remoteFiles 远程文件列表
-   * @param remoteMemePath 远程基准路径
-   * @param replacPath 替换的目录,例: `\crystelf\meme`
+   * @param remoteApiPath 远程基准路径
+   * @param replacPath 替换的目录,例: `\\crystelf\\meme`
    * @private
    */
   public async compareAndDownloadFiles(
     localPath: string,
     localFiles: string[],
     remoteFiles: any[],
-    remoteMemePath: string,
+    remoteApiPath: string,
     replacPath: string,
   ) {
     const remoteBasePath = this.configService.get(`OPENLIST_API_BASE_PATH`);
+    const normalizedLocalFiles = localFiles.map((f) =>
+      path.normalize(f).replace(/\\/g, '/'),
+    );
     for (const remoteFile of remoteFiles) {
-      let relativePath = path.relative(remoteMemePath, remoteFile.path);
+      let relativePath = path.relative(remoteApiPath, remoteFile.path);
       //this.logger.debug(`relativePath: ${relativePath}`);
       //this.logger.debug(remoteBasePath);
       if (remoteBasePath) {
         let remoteRelativePath = relativePath.replace(remoteBasePath, ''); //服务器下载用目录
+        //this.logger.debug(`remoteRelativePath: ${remoteRelativePath}`); //√\
+        remoteRelativePath = path
+          .normalize(remoteRelativePath)
+          .replace(/\\/g, '/');
+        replacPath = path.normalize(replacPath).replace(/\\/g, '/');
         relativePath = remoteRelativePath.replace(replacPath, ''); //本地储存用
-        this.logger.debug(`relativePath: ${relativePath}`);
-        this.logger.debug(`remoteRelativePath: ${remoteRelativePath}`);
-        const localFilePath = path.join(
-          localPath,
-          relativePath.replace(/\\/g, '/'),
-        );
+        this.logger.debug(`replacPath: ${relativePath}`);
+        relativePath = path.normalize(relativePath).replace(/\\/g, '/');
+        this.logger.debug(`relativePathEd: ${relativePath}`);
+        const localFilePath = path
+          .normalize(path.join(localPath, relativePath))
+          .replace(/\\/g, '/');
+        //this.logger.debug(`localFilePath: ${localFilePath}`);
         if (remoteFile.is_dir) {
           try {
             //const localDirPath = path.dirname(localFilePath);
@@ -78,9 +87,9 @@ export class FilesService {
             if (subRemoteFiles.code === 200 && subRemoteFiles.data.content) {
               await this.compareAndDownloadFiles(
                 localPath,
-                [],
+                normalizedLocalFiles,
                 subRemoteFiles.data.content,
-                remoteMemePath,
+                remoteApiPath,
                 replacPath,
               );
             }
@@ -88,7 +97,14 @@ export class FilesService {
             this.logger.error(`递归处理文件夹失败: ${localFilePath}`, error);
           }
         } else {
-          if (!localFiles.includes(localFilePath)) {
+          const normalizedLocalFiles = localFiles.map((f) =>
+            path.normalize(f).replace(/\\/g, '/'),
+          );
+          //this.logger.debug(
+          //`normalizedLocalFiles: ${JSON.stringify(normalizedLocalFiles)}`,
+          //);
+
+          if (!normalizedLocalFiles.includes(localFilePath)) {
             this.logger.log(`文件缺失: ${localFilePath}, 开始下载..`);
             try {
               await this.openListService.downloadFile(
@@ -96,9 +112,15 @@ export class FilesService {
                 localFilePath,
               );
               this.logger.log(`文件下载成功: ${localFilePath}`);
+              normalizedLocalFiles.push(localFilePath);
+              this.logger.debug(
+                `localFilePath: ${JSON.stringify(normalizedLocalFiles)}`,
+              );
             } catch (error) {
               this.logger.error(`下载文件失败: ${localFilePath}`, error);
             }
+          } else {
+            this.logger.log('本地文件已是最新..');
           }
         }
       } else {

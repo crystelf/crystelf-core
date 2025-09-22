@@ -33,6 +33,7 @@ export class MemeService {
         try {
           const remoteFiles =
             await this.openListService.listFiles(remoteMemePath);
+          //this.logger.debug(`remoteFiles: ${remoteFiles}`);
           if (remoteFiles.code === 200 && remoteFiles.data.content) {
             let remoteFileList = remoteFiles.data.content;
             const localFiles =
@@ -43,7 +44,7 @@ export class MemeService {
               localFiles,
               remoteFileList,
               remoteMemePath,
-              '\crystelf\meme',
+              '\\crystelf\\meme',
             );
           } else {
             this.logger.error('获取远程表情仓库文件失败..');

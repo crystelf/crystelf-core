@@ -29,23 +29,24 @@ export class CdnService {
 
   private startAutoUpdate() {
     setInterval(async () => {
-      const cdnPath = path.join(this.pathService.get('private'));
+      const cdnPath = path.join(this.pathService.get('public')); //baseDir/public
       const remoteCdnPath = this.configService.get('OPENLIST_API_CDN_PATH');
       if (remoteCdnPath) {
         this.logger.log('定时检查晶灵cdn更新..');
         try {
           const remoteFiles =
-            await this.openListService.listFiles(remoteCdnPath);
+            await this.openListService.listFiles(remoteCdnPath); //crystelf/cdn
           if (remoteFiles.code === 200 && remoteFiles.data.content) {
             let remoteFileList = remoteFiles.data.content;
             const localFiles =
               await this.filesService.getLocalFileList(cdnPath);
+            this.logger.debug(`localFlies: ${JSON.stringify(localFiles)}`);
             await this.filesService.compareAndDownloadFiles(
               cdnPath,
               localFiles,
               remoteFileList,
               remoteCdnPath,
-              '\crystelf\cdn',
+              '\\crystelf\\cdn',
             );
           } else {
             this.logger.error(`晶灵cdn检查更新失败: ${remoteFiles.code}`);
