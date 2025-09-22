@@ -10,7 +10,7 @@ import { FilesService } from '../../core/files/files.service';
 export class CdnService {
   private readonly logger = new Logger(CdnService.name);
   private filePath: string;
-  private readonly updateMs = 1 * 60 * 100; // 15min
+  private readonly updateMs = 15 * 60 * 1000; // 15min
   @Inject(PathService)
   private readonly paths: PathService;
   constructor(
