@@ -123,9 +123,9 @@ export class MemeController {
         type?.mime === 'image/webp' ||
         type?.mime === 'image/apng';
 
-      this.logger.debug(type?.mime);
-      const singleRate = 100 * 1024; // 100 KB/s * 3
-      const maxThreads = 3;
+      //this.logger.debug(type?.mime);
+      const singleRate = 200 * 1024; // 100 KB/s * 3
+      const maxThreads = 2;
       const maxRate = singleRate * maxThreads;
 
       if (hasValidToken) {

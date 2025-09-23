@@ -56,7 +56,7 @@ export class OpenListUtils {
       let data = JSON.stringify({
         path: path,
       });
-      this.logger.debug(path);
+      //this.logger.debug(path);
       let config = {
         method: 'post',
         url: `${url}`,
@@ -68,7 +68,7 @@ export class OpenListUtils {
       };
       let response = await axios(config);
       //this.logger.debug(response);
-      this.logger.log(`列出目录${path}成功..`);
+      //this.logger.log(`列出目录${path}成功..`);
       return response.data;
     } catch (error) {
       this.logger.error(`列出目录${path}失败..`, error);
@@ -99,7 +99,7 @@ export class OpenListUtils {
         data: data,
       };
       const response = await axios(config);
-      this.logger.log(`获取文件信息成功: ${filePath}`);
+      //this.logger.log(`获取文件信息成功: ${filePath}`);
       return response.data;
     } catch (error) {
       this.logger.error(`获取文件信息失败: ${filePath}`, error);
