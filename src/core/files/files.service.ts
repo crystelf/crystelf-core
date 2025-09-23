@@ -103,12 +103,12 @@ export class FilesService {
       const localFilePath = path.normalize(localFilePathRaw);
       const localFilePathForCompare = localFilePath.replace(/\\/g, '/');
 
-      this.logger.debug(`replacPath: ${replacPath}`);
-      this.logger.debug(`remoteBaseNorm: ${remoteBaseNorm}`);
-      this.logger.debug(`rawRemotePath: ${rawRemotePath}`);
-      this.logger.debug(`remoteRelativePath: ${remoteRelativePath}`);
-      this.logger.debug(`localRelative: ${localRelative}`);
-      this.logger.debug(`localFilePath: ${localFilePathForCompare}`);
+      //this.logger.debug(`replacPath: ${replacPath}`);
+      //this.logger.debug(`remoteBaseNorm: ${remoteBaseNorm}`);
+      //this.logger.debug(`rawRemotePath: ${rawRemotePath}`);
+      //this.logger.debug(`remoteRelativePath: ${remoteRelativePath}`);
+      //this.logger.debug(`localRelative: ${localRelative}`);
+      //this.logger.debug(`localFilePath: ${localFilePathForCompare}`);
 
       if (remoteFile.is_dir) {
         try {

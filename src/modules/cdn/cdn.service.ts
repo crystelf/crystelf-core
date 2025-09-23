@@ -10,7 +10,7 @@ import { FilesService } from '../../core/files/files.service';
 export class CdnService {
   private readonly logger = new Logger(CdnService.name);
   private filePath: string;
-  private readonly updateMs = 2 * 60 * 100; // 15min
+  private readonly updateMs = 10 * 60 * 1000; // 10min
   @Inject(PathService)
   private readonly paths: PathService;
   constructor(
@@ -40,7 +40,7 @@ export class CdnService {
             let remoteFileList = remoteFiles.data.content;
             const localFiles =
               await this.filesService.getLocalFileList(cdnPath);
-            this.logger.debug(`localFlies: ${JSON.stringify(localFiles)}`);
+            //this.logger.debug(`localFlies: ${JSON.stringify(localFiles)}`);
             await this.filesService.compareAndDownloadFiles(
               cdnPath,
               localFiles,
