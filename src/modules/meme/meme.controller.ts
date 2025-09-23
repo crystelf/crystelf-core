@@ -18,6 +18,7 @@ import * as fs from 'fs';
 import { Throttle } from 'stream-throttle';
 import { ToolsService } from '../../core/tools/tools.service';
 import { RedisService } from '../../core/redis/redis.service';
+import imageType from 'image-type';
 
 class MemeRequestDto {
   character?: string;
@@ -113,6 +114,20 @@ export class MemeController {
         );
       });
 
+      const fd = await fs.promises.open(memePath, 'r');
+      const { buffer } = await fd.read(Buffer.alloc(4100), 0, 4100, 0);
+      await fd.close();
+      const type = await imageType(buffer);
+      const isAnimatedImage =
+        type?.mime === 'image/gif' ||
+        type?.mime === 'image/webp' ||
+        type?.mime === 'image/apng';
+
+      this.logger.debug(type?.mime);
+      const singleRate = 100 * 1024; // 100 KB/s * 3
+      const maxThreads = 3;
+      const maxRate = singleRate * maxThreads;
+
       if (hasValidToken) {
         this.logger.log(`[${method}] 有token的入不限速 => ${memePath}`);
         stream.pipe(res);
@@ -124,15 +139,18 @@ export class MemeController {
             bytes,
             1,
           );
-          if (total > 100 * 1024) {
-            this.logger.warn(`[${method}]${ip} 超过速率限制,断开连接..`);
+          if (total > maxRate && !isAnimatedImage) {
+            this.logger.warn(`[${method}] ${ip} 超过速率限制,断开连接..`);
             stream.destroy();
             res.end();
           }
         });
 
-        const throttle = new Throttle({ rate: 100 * 1024 });
-        this.logger.log(`[${method}] 白嫖入限速! (${ip}) => ${memePath}`);
+        const throttle = new Throttle({ rate: singleRate });
+        this.logger.log(
+          `[${method}] 白嫖入限速! (${ip}) => ${memePath}
+          `,
+        );
         stream.pipe(throttle).pipe(res);
       }
     } catch (e) {
