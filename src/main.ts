@@ -33,7 +33,6 @@ async function bootstrap() {
       { path: 'public/(.*)', method: RequestMethod.ALL },
     ],
   });
-
   app.useGlobalInterceptors(new ResponseInterceptor());
   app.useGlobalFilters(new AllExceptionsFilter());
   const systemService = app.get(SystemService);

@@ -10,7 +10,7 @@ import { FilesService } from '../../core/files/files.service';
 export class CdnService {
   private readonly logger = new Logger(CdnService.name);
   private filePath: string;
-  private readonly updateMs = 15 * 60 * 1000; // 15min
+  private readonly updateMs = 2 * 60 * 100; // 15min
   @Inject(PathService)
   private readonly paths: PathService;
   constructor(
@@ -24,7 +24,7 @@ export class CdnService {
     private readonly filesService: FilesService,
   ) {
     this.startAutoUpdate();
-    this.logger.log(`晶灵云图数据中心初始化.. 数据存储在: ${this.filePath}`);
+    this.logger.log(`晶灵云数据中心初始化.. 数据存储在: ${this.filePath}`);
   }
 
   private startAutoUpdate() {
@@ -55,7 +55,7 @@ export class CdnService {
           this.logger.error(`晶灵cdn检查更新失败: ${error}`);
         }
       } else {
-        this.logger.warn('未配置远程表情包地址..');
+        this.logger.warn('未配置远程cdn地址..');
       }
     }, this.updateMs);
   }

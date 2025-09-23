@@ -53,78 +53,96 @@ export class FilesService {
     remoteApiPath: string,
     replacPath: string,
   ) {
-    const remoteBasePath = this.configService.get(`OPENLIST_API_BASE_PATH`);
+    const remoteBasePath = this.configService.get(`OPENLIST_API_BASE_PATH`) as
+      | string
+      | undefined;
+
     const normalizedLocalFiles = localFiles.map((f) =>
       path.normalize(f).replace(/\\/g, '/'),
     );
-    for (const remoteFile of remoteFiles) {
-      let relativePath = path.relative(remoteApiPath, remoteFile.path);
-      //this.logger.debug(`relativePath: ${relativePath}`);
-      //this.logger.debug(remoteBasePath);
-      if (remoteBasePath) {
-        let remoteRelativePath = relativePath.replace(remoteBasePath, ''); //服务器下载用目录
-        //this.logger.debug(`remoteRelativePath: ${remoteRelativePath}`); //√\
-        remoteRelativePath = path
-          .normalize(remoteRelativePath)
-          .replace(/\\/g, '/');
-        replacPath = path.normalize(replacPath).replace(/\\/g, '/');
-        relativePath = remoteRelativePath.replace(replacPath, ''); //本地储存用
-        this.logger.debug(`replacPath: ${relativePath}`);
-        relativePath = path.normalize(relativePath).replace(/\\/g, '/');
-        this.logger.debug(`relativePathEd: ${relativePath}`);
-        const localFilePath = path
-          .normalize(path.join(localPath, relativePath))
-          .replace(/\\/g, '/');
-        //this.logger.debug(`localFilePath: ${localFilePath}`);
-        if (remoteFile.is_dir) {
-          try {
-            //const localDirPath = path.dirname(localFilePath);
-            //await fs.mkdir(localDirPath, { recursive: true });
-            //this.logger.log(`文件夹已创建: ${localDirPath}`);
-            //相关逻辑已在oplist工具中处理
-            const subRemoteFiles =
-              await this.openListService.listFiles(remoteRelativePath);
-            if (subRemoteFiles.code === 200 && subRemoteFiles.data.content) {
-              await this.compareAndDownloadFiles(
-                localPath,
-                normalizedLocalFiles,
-                subRemoteFiles.data.content,
-                remoteApiPath,
-                replacPath,
-              );
-            }
-          } catch (error) {
-            this.logger.error(`递归处理文件夹失败: ${localFilePath}`, error);
-          }
-        } else {
-          const normalizedLocalFiles = localFiles.map((f) =>
-            path.normalize(f).replace(/\\/g, '/'),
-          );
-          //this.logger.debug(
-          //`normalizedLocalFiles: ${JSON.stringify(normalizedLocalFiles)}`,
-          //);
 
-          if (!normalizedLocalFiles.includes(localFilePath)) {
-            this.logger.log(`文件缺失: ${localFilePath}, 开始下载..`);
-            try {
-              await this.openListService.downloadFile(
-                remoteRelativePath,
-                localFilePath,
-              );
-              this.logger.log(`文件下载成功: ${localFilePath}`);
-              normalizedLocalFiles.push(localFilePath);
-              this.logger.debug(
-                `localFilePath: ${JSON.stringify(normalizedLocalFiles)}`,
-              );
-            } catch (error) {
-              this.logger.error(`下载文件失败: ${localFilePath}`, error);
-            }
-          } else {
-            this.logger.log('本地文件已是最新..');
+    const remoteApiNorm = (remoteApiPath || '')
+      .replace(/\\/g, '/')
+      .replace(/\/+$/, '');
+    const remoteBaseNorm = (remoteBasePath || '')
+      .replace(/\\/g, '/')
+      .replace(/\/+$/, '');
+    let replacPathNorm = (replacPath || '').replace(/\\/g, '/');
+    if (replacPathNorm && !replacPathNorm.startsWith('/'))
+      replacPathNorm = '/' + replacPathNorm;
+    replacPathNorm = replacPathNorm.replace(/\/+$/, '');
+
+    for (const remoteFile of remoteFiles) {
+      const rawRemotePath = String(remoteFile.path || '').replace(/\\/g, '/');
+
+      let remoteRelativePath = '';
+
+      if (remoteBaseNorm && rawRemotePath.startsWith(remoteBaseNorm)) {
+        remoteRelativePath = rawRemotePath.slice(remoteBaseNorm.length);
+      } else if (remoteApiNorm && rawRemotePath.includes(remoteApiNorm)) {
+        remoteRelativePath = rawRemotePath.slice(
+          rawRemotePath.indexOf(remoteApiNorm),
+        );
+      } else {
+        const rel = path.posix.relative(remoteApiNorm || '/', rawRemotePath);
+        remoteRelativePath = rel ? '/' + rel.replace(/\/+/g, '/') : '/';
+      }
+
+      remoteRelativePath = remoteRelativePath.replace(/\/+/g, '/');
+      if (!remoteRelativePath.startsWith('/'))
+        remoteRelativePath = '/' + remoteRelativePath;
+
+      let localRelative = remoteRelativePath;
+      if (replacPathNorm && localRelative.startsWith(replacPathNorm)) {
+        localRelative = localRelative.slice(replacPathNorm.length);
+      } else if (replacPathNorm && localRelative.includes(replacPathNorm)) {
+        localRelative = localRelative.replace(replacPathNorm, '');
+      }
+      localRelative = localRelative.replace(/\/+/g, '/').replace(/^\/+/, '');
+      const localFilePathRaw = path.join(localPath, localRelative);
+      const localFilePath = path.normalize(localFilePathRaw);
+      const localFilePathForCompare = localFilePath.replace(/\\/g, '/');
+
+      this.logger.debug(`replacPath: ${replacPath}`);
+      this.logger.debug(`remoteBaseNorm: ${remoteBaseNorm}`);
+      this.logger.debug(`rawRemotePath: ${rawRemotePath}`);
+      this.logger.debug(`remoteRelativePath: ${remoteRelativePath}`);
+      this.logger.debug(`localRelative: ${localRelative}`);
+      this.logger.debug(`localFilePath: ${localFilePathForCompare}`);
+
+      if (remoteFile.is_dir) {
+        try {
+          const subRemote =
+            await this.openListService.listFiles(remoteRelativePath);
+          if (subRemote.code === 200 && subRemote.data?.content) {
+            await this.compareAndDownloadFiles(
+              localPath,
+              normalizedLocalFiles,
+              subRemote.data.content,
+              remoteApiPath,
+              replacPath,
+            );
           }
+        } catch (error) {
+          this.logger.error(`递归处理文件夹失败: ${localFilePath}`, error);
         }
       } else {
-        this.logger.error(`未配置远程根路径..`);
+        if (!normalizedLocalFiles.includes(localFilePathForCompare)) {
+          this.logger.log(`文件缺失: ${localFilePath}, 开始下载..`);
+          try {
+            await fs.mkdir(path.dirname(localFilePath), { recursive: true });
+            await this.openListService.downloadFile(
+              remoteRelativePath,
+              localFilePath,
+            );
+            this.logger.log(`文件下载成功: ${localFilePath}`);
+            normalizedLocalFiles.push(localFilePathForCompare);
+          } catch (error) {
+            this.logger.error(`下载文件失败: ${localFilePath}`, error);
+          }
+        } else {
+          this.logger.log('本地文件已是最新..');
+        }
       }
     }
   }
