@@ -50,6 +50,12 @@ export class CdnService {
             );
           } else {
             this.logger.error(`晶灵cdn检查更新失败: ${remoteFiles.code}`);
+            if (remoteFiles.code === 401) {
+              this.logger.log('尝试更新token..');
+              if (await this.openListService.updateToken()) {
+                this.logger.log('更新token成功..');
+              }
+            }
           }
         } catch (error) {
           this.logger.error(`晶灵cdn检查更新失败: ${error}`);

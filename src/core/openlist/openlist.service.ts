@@ -37,6 +37,23 @@ export class OpenListService {
     }
   }
 
+  public async updateToken(): Promise<boolean> {
+    try {
+      const username = this.configService.get('OPENLIST_API_BASE_USERNAME');
+      const password = this.configService.get('OPENLIST_API_BASE_PASSWORD');
+      if (username && password) {
+        this.token = await OpenListUtils.getToken(username, password);
+        return true;
+      } else {
+        this.logger.warn('请先配置用户名和密码..');
+        return false;
+      }
+    } catch (e) {
+      this.logger.error(`更新token失败: ${e.message}`);
+      return false;
+    }
+  }
+
   /**
    * 获取OpenList的JWT Token，如果Token已过期，则重新获取
    * @param username 用户名
