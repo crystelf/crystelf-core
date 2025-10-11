@@ -1,6 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { AppConfigService } from '../../config/config.service';
-import { FileInfo, FsList } from './openlist.types';
+import { FileInfo, FileUpload, FsList } from './openlist.types';
 import { OpenListUtils } from './openlist.utils';
 import * as moment from 'moment';
 
@@ -148,13 +148,18 @@ export class OpenListService {
     filePath: string,
     file: any,
     filePathOnserver: string,
-  ): Promise<void> {
+  ): Promise<FileUpload> {
     try {
       const token = await this.fetchToken(
         <string>this.configService.get('OPENLIST_API_BASE_USERNAME'),
         <string>this.configService.get('OPENLIST_API_BASE_PASSWORD'),
       );
-      await OpenListUtils.uploadFile(token, filePath, filePathOnserver, file);
+      return await OpenListUtils.uploadFile(
+        token,
+        filePath,
+        filePathOnserver,
+        file,
+      );
     } catch (error) {
       this.logger.error('上传文件失败:', error);
       throw new Error('上传文件失败');

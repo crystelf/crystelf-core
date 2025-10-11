@@ -209,7 +209,6 @@ export class MemeController {
     @UploadedFile() file: Express.Multer.File,
     @Body('character') character: string,
     @Body('status') status: string,
-    @Res() res: Response,
   ) {
     if (!file) {
       throw new HttpException('未检测到上传文件', HttpStatus.BAD_REQUEST);
@@ -270,7 +269,7 @@ export class MemeController {
         remoteFilePath,
       );
       this.logger.log(`表情包上传成功: ${remoteFilePath}`);
-      return '表情上传成功!';
+      return '表情上传成功..';
     } catch (error) {
       this.logger.error('表情包上传失败:', error);
       throw new HttpException(
