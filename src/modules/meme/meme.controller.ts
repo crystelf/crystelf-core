@@ -186,7 +186,6 @@ export class MemeController {
    * @param file
    * @param character
    * @param status
-   * @param token
    * @param res
    */
   @Post('upload')
@@ -210,7 +209,6 @@ export class MemeController {
     @UploadedFile() file: Express.Multer.File,
     @Body('character') character: string,
     @Body('status') status: string,
-    @Body('token') token: string,
     @Res() res: Response,
   ) {
     if (!file) {
@@ -218,7 +216,15 @@ export class MemeController {
     }
 
     try {
-      const buffer = file.buffer;
+      const fsp = fs.promises;
+      const safeCharacter = character?.trim() || 'unknown';
+      const safeStatus = status?.trim() || 'default';
+
+      const memeBasePath = this.pathService.get('meme');
+      const localDir = path.join(memeBasePath, safeCharacter, safeStatus);
+      await fsp.mkdir(localDir, { recursive: true });
+
+      const buffer = file.buffer || (await fsp.readFile(file.path));
       const imgType = await imageType(buffer);
       if (!imgType || !['jpg', 'png', 'gif', 'webp'].includes(imgType.ext)) {
         throw new HttpException(
@@ -226,16 +232,10 @@ export class MemeController {
           HttpStatus.UNSUPPORTED_MEDIA_TYPE,
         );
       }
-
-      const fsp = fs.promises;
-      const safeCharacter = character?.trim() || 'unknown';
-      const safeStatus = status?.trim() || 'default';
-      const tempDir = path.join(this.pathService.get('temp'), 'meme');
-      await fsp.mkdir(tempDir, { recursive: true });
       const remoteMemePath = this.configService.get('OPENLIST_API_MEME_PATH');
-
       const remoteDir = `${remoteMemePath}/${safeCharacter}/${safeStatus}/`;
       let fileList: string[] = [];
+
       try {
         const listResult = await this.openListService.listFiles(remoteDir);
         if (
@@ -259,26 +259,18 @@ export class MemeController {
 
       const nextNumber =
         usedNumbers.length > 0 ? Math.max(...usedNumbers) + 1 : 1;
-      const filename = `${nextNumber}.${imgType.ext}`;
-      const tempFilePath = path.join(tempDir, filename);
-      await fsp.writeFile(tempFilePath, buffer);
-      //const openlistBasePath = this.configService.get('OPENLIST_API_BASE_PATH');
-
-      const openListTargetPath = `${remoteDir}${filename}`;
-      const fileStream = fs.createReadStream(tempFilePath);
+      const remoteFilename = `${nextNumber}.${imgType.ext}`;
+      const remoteFilePath = `${remoteDir}${remoteFilename}`;
+      const localFilePath = path.join(localDir, remoteFilename);
+      await fsp.writeFile(localFilePath, buffer);
+      const fileStream = fs.createReadStream(localFilePath);
       await this.openListService.uploadFile(
-        tempFilePath,
+        localFilePath,
         fileStream,
-        openListTargetPath,
+        remoteFilePath,
       );
-
-      await fsp.unlink(tempFilePath);
-      this.logger.log(`表情包上传成功: ${openListTargetPath}`);
-      return res.status(200).json({
-        message: '表情上传成功！',
-        path: openListTargetPath,
-        filename,
-      });
+      this.logger.log(`表情包上传成功: ${remoteFilePath}`);
+      return '表情上传成功!';
     } catch (error) {
       this.logger.error('表情包上传失败:', error);
       throw new HttpException(

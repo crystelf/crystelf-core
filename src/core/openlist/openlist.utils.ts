@@ -162,10 +162,13 @@ export class OpenListUtils {
     file: fs.ReadStream,
   ): Promise<FileUpload> {
     const url = `${this.apiBaseUrl}/api/fs/put`;
+    const stats = fs.statSync(filePath);
+    const fileSize = stats.size;
+
     const headers = {
       Authorization: `${token}`,
       'Content-Type': 'application/octet-stream',
-      'Content-Length': file.bytesRead,
+      'Content-Length': fileSize,
       'File-Path': encodeURIComponent(filePathOnServer),
     };
 
@@ -174,14 +177,17 @@ export class OpenListUtils {
         headers,
         params: {
           path: filePath,
-          'As-Task': 'true', //作为任务
+          'As-Task': 'true',
         },
+        maxBodyLength: Infinity,
+        maxContentLength: Infinity,
       });
+
       this.logger.log(`文件上传成功: ${filePathOnServer}`);
       return response.data;
     } catch (error) {
       this.logger.error('上传文件失败..', error);
-      throw new Error('上传文件失败..');
+      throw new Error(`上传文件失败: ${error.message || error}`);
     }
   }
 }
