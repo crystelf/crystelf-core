@@ -10,8 +10,18 @@ import {
   Logger,
   Inject,
   Ip,
+  UseInterceptors,
+  UploadedFile,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBody, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBody,
+  ApiQuery,
+  ApiConsumes,
+  ApiHeader,
+} from '@nestjs/swagger';
 import { MemeService } from './meme.service';
 import { Response } from 'express';
 import * as fs from 'fs';
@@ -19,6 +29,12 @@ import { Throttle } from 'stream-throttle';
 import { ToolsService } from '../../core/tools/tools.service';
 import { RedisService } from '../../core/redis/redis.service';
 import imageType from 'image-type';
+import { FileInterceptor } from '@nestjs/platform-express';
+import * as path from 'path';
+import { OpenListService } from '../../core/openlist/openlist.service';
+import { PathService } from '../../core/path/path.service';
+import { TokenAuthGuard } from '../../core/tools/token-auth.guard';
+import { AppConfigService } from '../../config/config.service';
 
 class MemeRequestDto {
   character?: string;
@@ -38,6 +54,12 @@ export class MemeController {
     private readonly toolsService: ToolsService,
     @Inject(RedisService)
     private readonly redisService: RedisService,
+    @Inject(OpenListService)
+    private readonly openListService: OpenListService,
+    @Inject(PathService)
+    private readonly pathService: PathService,
+    @Inject(AppConfigService)
+    private readonly configService: AppConfigService,
   ) {}
 
   @Post('get')
@@ -156,6 +178,113 @@ export class MemeController {
     } catch (e) {
       this.logger.error(`获取表情包失败:${e.message}`);
       throw new HttpException('服务器错误', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  /**
+   * 上传文件
+   * @param file
+   * @param character
+   * @param status
+   * @param token
+   * @param res
+   */
+  @Post('upload')
+  @ApiOperation({ summary: '上传表情包并同步' })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiHeader({ name: 'x-token', description: '身份验证token', required: true })
+  @UseGuards(TokenAuthGuard)
+  @ApiBody({
+    description: '上传表情包文件',
+    schema: {
+      type: 'object',
+      properties: {
+        file: { type: 'string', format: 'binary' },
+        character: { type: 'string', description: '角色名称' },
+        status: { type: 'string', description: '状态' },
+      },
+    },
+  })
+  public async uploadMeme(
+    @UploadedFile() file: Express.Multer.File,
+    @Body('character') character: string,
+    @Body('status') status: string,
+    @Body('token') token: string,
+    @Res() res: Response,
+  ) {
+    if (!file) {
+      throw new HttpException('未检测到上传文件', HttpStatus.BAD_REQUEST);
+    }
+
+    try {
+      const buffer = file.buffer;
+      const imgType = await imageType(buffer);
+      if (!imgType || !['jpg', 'png', 'gif', 'webp'].includes(imgType.ext)) {
+        throw new HttpException(
+          '不支持的图片格式',
+          HttpStatus.UNSUPPORTED_MEDIA_TYPE,
+        );
+      }
+
+      const fsp = fs.promises;
+      const safeCharacter = character?.trim() || 'unknown';
+      const safeStatus = status?.trim() || 'default';
+      const tempDir = path.join(this.pathService.get('temp'), 'meme');
+      await fsp.mkdir(tempDir, { recursive: true });
+      const remoteMemePath = this.configService.get('OPENLIST_API_MEME_PATH');
+
+      const remoteDir = `${remoteMemePath}/${safeCharacter}/${safeStatus}/`;
+      let fileList: string[] = [];
+      try {
+        const listResult = await this.openListService.listFiles(remoteDir);
+        if (
+          listResult?.code === 200 &&
+          Array.isArray(listResult.data?.content)
+        ) {
+          fileList = listResult.data.content.map((f) => f.name);
+        } else {
+          this.logger.warn(`目录为空或返回结构异常：${remoteDir}`);
+        }
+      } catch (err) {
+        this.logger.warn(`获取远程目录失败(${remoteDir})，将自动创建`);
+      }
+
+      const usedNumbers = fileList
+        .map((name) => {
+          const match = name.match(/^(\d+)\./);
+          return match ? parseInt(match[1], 10) : null;
+        })
+        .filter((n) => n !== null) as number[];
+
+      const nextNumber =
+        usedNumbers.length > 0 ? Math.max(...usedNumbers) + 1 : 1;
+      const filename = `${nextNumber}.${imgType.ext}`;
+      const tempFilePath = path.join(tempDir, filename);
+      await fsp.writeFile(tempFilePath, buffer);
+      //const openlistBasePath = this.configService.get('OPENLIST_API_BASE_PATH');
+
+      const openListTargetPath = `${remoteDir}${filename}`;
+      const fileStream = fs.createReadStream(tempFilePath);
+      await this.openListService.uploadFile(
+        tempFilePath,
+        fileStream,
+        openListTargetPath,
+      );
+
+      await fsp.unlink(tempFilePath);
+      this.logger.log(`表情包上传成功: ${openListTargetPath}`);
+      return res.status(200).json({
+        message: '表情上传成功！',
+        path: openListTargetPath,
+        filename,
+      });
+    } catch (error) {
+      this.logger.error('表情包上传失败:', error);
+      throw new HttpException(
+        `上传失败: ${error.message || error}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }

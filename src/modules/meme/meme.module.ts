@@ -16,6 +16,7 @@ import { FilesModule } from '../../core/files/files.module';
     RedisModule,
     AppConfigModule,
     FilesModule,
+    PathModule,
   ],
   providers: [MemeService],
   controllers: [MemeController],
