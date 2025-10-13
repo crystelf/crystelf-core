@@ -59,7 +59,9 @@ export class WordsService {
   }
 
   /**
-   * 从本地加载文案到内存
+   * 加载文案
+   * @param type 文案类型
+   * @param name 文案名称
    */
   public async loadWord(type: string, name: string): Promise<string[] | null> {
     const safeType = this.safePathSegment(type);
@@ -91,7 +93,9 @@ export class WordsService {
   }
 
   /**
-   * 重载文案
+   * 重载某条文案
+   * @param type 文案类型
+   * @param name 文案名称
    */
   public async reloadWord(type: string, name: string): Promise<boolean> {
     const safeType = this.safePathSegment(type);
@@ -116,6 +120,27 @@ export class WordsService {
     } catch (e) {
       this.logger.error(`重载文案失败: ${cacheKey}`, e);
       return false;
+    }
+  }
+
+  /**
+   * 获取文案名称数组
+   * @param type 文案类型
+   */
+  public async listWordNames(type: string): Promise<string[]> {
+    const safeType = this.safePathSegment(type);
+    const dirPath = path.join(this.paths.get('words'), safeType);
+
+    try {
+      const files = await fs.readdir(dirPath, { withFileTypes: true });
+      const names = files
+        .filter((f) => f.isFile() && f.name.endsWith('.json'))
+        .map((f) => f.name.replace(/\.json$/, ''));
+      this.logger.log(`扫描文案类型 ${safeType} 下的文件: ${names.join(', ')}`);
+      return names;
+    } catch (e) {
+      this.logger.error(`读取文案目录失败: ${safeType}`, e);
+      return [];
     }
   }
 

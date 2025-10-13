@@ -89,4 +89,31 @@ export class WordsController {
       throw new HttpException('服务器错误', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+
+  @Post('list')
+  @ApiOperation({ summary: '获取指定类型下的所有文案名称' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        type: { type: 'string', example: 'poke' },
+      },
+      required: ['type'],
+    },
+  })
+  public async listWords(@Body('type') type: string) {
+    try {
+      const names = await this.wordsService.listWordNames(type);
+      if (names.length === 0) {
+        throw new HttpException(
+          `类型 ${type} 下没有可用文案或目录不存在..`,
+          HttpStatus.NOT_FOUND,
+        );
+      }
+      return names;
+    } catch (e) {
+      this.logger.error(`listWords 失败: ${e}`);
+      throw new HttpException('服务器错误', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
 }
