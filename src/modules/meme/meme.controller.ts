@@ -5,7 +5,6 @@ import {
   Body,
   Query,
   Res,
-  HttpException,
   HttpStatus,
   Logger,
   Inject,
@@ -35,6 +34,7 @@ import { OpenListService } from '../../core/openlist/openlist.service';
 import { PathService } from '../../core/path/path.service';
 import { TokenAuthGuard } from '../../core/tools/token-auth.guard';
 import { AppConfigService } from '../../config/config.service';
+import { ErrorUtil } from '../../common/utils/error.util';
 
 class MemeRequestDto {
   character?: string;
@@ -64,10 +64,17 @@ export class MemeController {
 
   @Post('get')
   @ApiOperation({ summary: '获取随机表情包' })
-  @ApiQuery({ name: 'character', required: false, description: '角色名称' })
-  @ApiQuery({ name: 'status', required: false, description: '状态' })
-  @ApiQuery({ name: 'token', required: false, description: '可选访问令牌' })
-  @ApiBody({ type: MemeRequestDto })
+  @ApiHeader({ name: 'x-token', description: '身份验证token', required: false })
+  @ApiBody({
+    description: '获取表情包参数',
+    schema: {
+      type: 'object',
+      properties: {
+        character: { type: 'string', description: '角色名称' },
+        status: { type: 'string', description: '状态' },
+      },
+    },
+  })
   public async getRandomMemePost(
     @Body() dto: MemeRequestDto,
     @Res() res: Response,
@@ -114,10 +121,7 @@ export class MemeController {
       );
 
       if (!memePath) {
-        throw new HttpException(
-          '没有找到符合条件的表情包',
-          HttpStatus.NOT_FOUND,
-        );
+        throw ErrorUtil.createNotFoundError('表情包');
       }
 
       const ext = memePath.split('.').pop()?.toLowerCase();
@@ -129,11 +133,8 @@ export class MemeController {
       res.setHeader('Content-Type', contentType);
       const stream = fs.createReadStream(memePath);
 
-      stream.on('error', () => {
-        throw new HttpException(
-          '读取表情包失败',
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
+      stream.on('error', (error) => {
+        throw ErrorUtil.createInternalError('读取表情包失败', error);
       });
 
       const fd = await fs.promises.open(memePath, 'r');
@@ -177,7 +178,7 @@ export class MemeController {
       }
     } catch (e) {
       this.logger.error(`获取表情包失败:${e.message}`);
-      throw new HttpException('服务器错误', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw ErrorUtil.handleUnknownError(e, '获取表情包失败');
     }
   }
 
@@ -186,7 +187,6 @@ export class MemeController {
    * @param file
    * @param character
    * @param status
-   * @param res
    */
   @Post('upload')
   @ApiOperation({ summary: '上传表情包并同步' })
@@ -211,7 +211,7 @@ export class MemeController {
     @Body('status') status: string,
   ) {
     if (!file) {
-      throw new HttpException('未检测到上传文件', HttpStatus.BAD_REQUEST);
+      throw ErrorUtil.createValidationError('未检测到上传文件');
     }
 
     try {
@@ -226,7 +226,7 @@ export class MemeController {
       const buffer = file.buffer || (await fsp.readFile(file.path));
       const imgType = await imageType(buffer);
       if (!imgType || !['jpg', 'png', 'gif', 'webp'].includes(imgType.ext)) {
-        throw new HttpException(
+        throw ErrorUtil.createBusinessError(
           '不支持的图片格式',
           HttpStatus.UNSUPPORTED_MEDIA_TYPE,
         );
@@ -243,10 +243,10 @@ export class MemeController {
         ) {
           fileList = listResult.data.content.map((f) => f.name);
         } else {
-          this.logger.warn(`目录为空或返回结构异常：${remoteDir}`);
+          this.logger.warn(`目录为空或返回结构异常:${remoteDir}`);
         }
       } catch (err) {
-        this.logger.warn(`获取远程目录失败(${remoteDir})，将自动创建`);
+        this.logger.warn(`获取远程目录失败(${remoteDir}),将自动创建`);
       }
 
       const usedNumbers = fileList
@@ -272,10 +272,7 @@ export class MemeController {
       return '表情上传成功..';
     } catch (error) {
       this.logger.error('表情包上传失败:', error);
-      throw new HttpException(
-        `上传失败: ${error.message || error}`,
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      throw ErrorUtil.handleUnknownError(error, '上传失败');
     }
   }
 }

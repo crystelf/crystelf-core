@@ -1,17 +1,8 @@
-import {
-  Controller,
-  Get,
-  Param,
-  Res,
-  Logger,
-  HttpException,
-  HttpStatus,
-  Inject,
-  Req,
-} from '@nestjs/common';
+import { Controller, Get, Res, Logger, Inject, Req } from '@nestjs/common';
 import { CdnService } from './cdn.service';
 import { Response } from 'express';
 import { ApiOperation } from '@nestjs/swagger';
+import { ErrorUtil } from '../../common/utils/error.util';
 
 @Controller()
 export class CdnController {
@@ -26,26 +17,20 @@ export class CdnController {
       const filePath = await this.fileService.getFile(relativePath);
       if (!filePath) {
         this.logger.warn(`${relativePath}：文件不存在..`);
-        throw new HttpException('文件不存在啦!', HttpStatus.NOT_FOUND);
+        throw ErrorUtil.createNotFoundError('文件', relativePath);
       }
 
       res.sendFile(filePath, (err) => {
         if (err) {
           this.logger.error(`文件投递失败: ${err.message}`);
-          throw new HttpException(
-            'Crystelf-CDN处理文件请求时出错..',
-            HttpStatus.INTERNAL_SERVER_ERROR,
-          );
+          throw ErrorUtil.createInternalError('文件投递失败', err);
         }
       });
 
       this.logger.log(`成功投递文件: ${filePath}`);
     } catch (error) {
       this.logger.error('晶灵数据请求处理失败:', error);
-      throw new HttpException(
-        'Crystelf-CDN处理文件请求时出错..',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      throw ErrorUtil.handleUnknownError(error, 'CDN处理文件请求失败');
     }
   }
 

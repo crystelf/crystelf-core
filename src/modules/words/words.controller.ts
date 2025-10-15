@@ -1,7 +1,6 @@
 import {
   Controller,
   Post,
-  HttpException,
   HttpStatus,
   Logger,
   Inject,
@@ -10,7 +9,8 @@ import {
 } from '@nestjs/common';
 import { WordsService } from './words.service';
 import { TokenAuthGuard } from '../../core/tools/token-auth.guard';
-import { ApiBody, ApiOperation, ApiProperty } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiProperty, ApiHeader } from '@nestjs/swagger';
+import { ErrorUtil } from '../../common/utils/error.util';
 
 class WordsDto {
   @ApiProperty({ description: '文案类型', example: 'poke' })
@@ -27,10 +27,7 @@ class WordsDto {
   name?: string;
 }
 
-class WordsReloadDto extends WordsDto {
-  @ApiProperty({ description: '密钥', example: '1111' })
-  token: string;
-}
+class WordsReloadDto extends WordsDto {}
 
 @Controller('words')
 export class WordsController {
@@ -45,15 +42,27 @@ export class WordsController {
    */
   @Post('getText')
   @ApiOperation({ summary: '获取随机文案' })
-  @ApiBody({ type: WordsDto })
+  @ApiBody({
+    description: '获取文案参数',
+    schema: {
+      type: 'object',
+      properties: {
+        type: { type: 'string', description: '文案类型', example: 'poke' },
+        id: { type: 'string', description: '文案名称', example: 'poke' },
+        name: {
+          type: 'string',
+          description: '可选参数：替换文案中的人名',
+          example: '坤坤',
+        },
+      },
+      required: ['type', 'id'],
+    },
+  })
   public async getText(@Body() dto: WordsDto) {
     try {
       const texts = await this.wordsService.loadWord(dto.type, dto.id);
       if (!texts || texts.length === 0) {
-        throw new HttpException(
-          `文案 ${dto.type}/${dto.id} 不存在或为空..`,
-          HttpStatus.NOT_FOUND,
-        );
+        throw ErrorUtil.createNotFoundError('文案', `${dto.type}/${dto.id}`);
       }
 
       const randomIndex = Math.floor(Math.random() * texts.length);
@@ -65,7 +74,7 @@ export class WordsController {
       return text;
     } catch (e) {
       this.logger.error(`getText 失败: ${e}`);
-      throw new HttpException('服务器错误', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw ErrorUtil.handleUnknownError(e, '获取文案失败');
     }
   }
 
@@ -75,18 +84,34 @@ export class WordsController {
   @Post('reloadText')
   @ApiOperation({ summary: '重载某条文案' })
   @UseGuards(TokenAuthGuard)
-  @ApiBody({ type: WordsReloadDto })
+  @ApiHeader({ name: 'x-token', description: '身份验证token', required: true })
+  @ApiBody({
+    description: '重载文案参数',
+    schema: {
+      type: 'object',
+      properties: {
+        type: { type: 'string', description: '文案类型', example: 'poke' },
+        id: { type: 'string', description: '文案名称', example: 'poke' },
+        name: {
+          type: 'string',
+          description: '可选参数：替换文案中的人名',
+          example: '坤坤',
+        },
+      },
+      required: ['type', 'id'],
+    },
+  })
   public async reloadWord(@Body() dto: WordsReloadDto) {
     try {
       const success = await this.wordsService.reloadWord(dto.type, dto.id);
       if (success) {
         return '成功重载..';
       } else {
-        throw new HttpException('重载失败..', HttpStatus.BAD_REQUEST);
+        throw ErrorUtil.createBusinessError('重载失败', HttpStatus.BAD_REQUEST);
       }
     } catch (e) {
       this.logger.error(`reloadWord 失败: ${e}`);
-      throw new HttpException('服务器错误', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw ErrorUtil.handleUnknownError(e, '重载文案失败');
     }
   }
 
@@ -105,15 +130,12 @@ export class WordsController {
     try {
       const names = await this.wordsService.listWordNames(type);
       if (names.length === 0) {
-        throw new HttpException(
-          `类型 ${type} 下没有可用文案或目录不存在..`,
-          HttpStatus.NOT_FOUND,
-        );
+        throw ErrorUtil.createNotFoundError('文案类型', type);
       }
       return names;
     } catch (e) {
       this.logger.error(`listWords 失败: ${e}`);
-      throw new HttpException('服务器错误', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw ErrorUtil.handleUnknownError(e, '获取文案列表失败');
     }
   }
 }

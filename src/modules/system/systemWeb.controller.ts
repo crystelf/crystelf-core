@@ -1,15 +1,7 @@
-import { Controller, Post, Inject, UseGuards, Param } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBody, ApiProperty } from '@nestjs/swagger';
+import { Controller, Post, Inject, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBody, ApiHeader } from '@nestjs/swagger';
 import { SystemWebService } from './systemWeb.service';
 import { TokenAuthGuard } from '../../core/tools/token-auth.guard';
-
-class WebServerDto {
-  @ApiProperty({
-    description: '密钥',
-    example: '1111',
-  })
-  token: string;
-}
 
 @ApiTags('System')
 @Controller('system')
@@ -28,8 +20,15 @@ export class SystemWebController {
     description: '核心执行重启',
   })
   @UseGuards(TokenAuthGuard)
-  @ApiBody({ type: WebServerDto })
-  public async systemRestart(@Param('token') token: string): Promise<string> {
+  @ApiHeader({ name: 'x-token', description: '身份验证token', required: true })
+  @ApiBody({
+    description: '系统重启请求',
+    schema: {
+      type: 'object',
+      properties: {},
+    },
+  })
+  public async systemRestart(): Promise<string> {
     this.systemService.systemRestart();
     return '核心正在重启..';
   }
@@ -43,8 +42,15 @@ export class SystemWebController {
     description: '返回上次核心重启的耗时',
   })
   @UseGuards(TokenAuthGuard)
-  @ApiBody({ type: WebServerDto })
-  public async getRestartTime(@Param('token') token: string): Promise<string> {
+  @ApiHeader({ name: 'x-token', description: '身份验证token', required: true })
+  @ApiBody({
+    description: '获取重启时间请求',
+    schema: {
+      type: 'object',
+      properties: {},
+    },
+  })
+  public async getRestartTime(): Promise<string> {
     return await this.systemService.getRestartTime();
   }
 }
