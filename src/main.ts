@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { Logger, RequestMethod } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
+import { RequestLogInterceptor } from './common/interceptors/request-log.interceptor';
 import { AllExceptionsFilter } from './common/filters/all-exception.filter';
 import { SystemService } from './core/system/system.service';
 import { WsAdapter } from '@nestjs/platform-ws';
@@ -35,7 +36,7 @@ async function bootstrap() {
       { path: 'public/(.*)', method: RequestMethod.ALL },
     ],
   });
-  app.useGlobalInterceptors(new ResponseInterceptor());
+  app.useGlobalInterceptors(new RequestLogInterceptor(), new ResponseInterceptor());
   app.useGlobalFilters(new AllExceptionsFilter());
   const systemService = app.get(SystemService);
   const restartDuration = systemService.checkRestartTime();

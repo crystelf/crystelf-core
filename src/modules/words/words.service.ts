@@ -101,7 +101,7 @@ export class WordsService {
     const safeType = this.safePathSegment(type);
     const safeName = this.safePathSegment(name);
     const cacheKey = `${safeType}/${safeName}`;
-    this.logger.log(`重载文案: ${cacheKey}..`);
+    //this.logger.log(`重载文案: ${cacheKey}..`);
     const filePath = path.join(
       this.paths.get('words'),
       safeType,
@@ -136,7 +136,7 @@ export class WordsService {
       const names = files
         .filter((f) => f.isFile() && f.name.endsWith('.json'))
         .map((f) => f.name.replace(/\.json$/, ''));
-      this.logger.log(`扫描文案类型 ${safeType} 下的文件: ${names.join(', ')}`);
+      //this.logger.log(`扫描文案类型 ${safeType} 下的文件: ${names.join(', ')}`);
       return names;
     } catch (e) {
       this.logger.error(`读取文案目录失败: ${safeType}`, e);
