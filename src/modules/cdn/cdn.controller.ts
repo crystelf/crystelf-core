@@ -29,8 +29,7 @@ export class CdnController {
 
       this.logger.log(`成功投递文件: ${filePath}`);
     } catch (error) {
-      this.logger.error('晶灵数据请求处理失败:', error);
-      throw ErrorUtil.handleUnknownError(error, 'CDN处理文件请求失败');
+      throw ErrorUtil.handleUnknownError(error, 'CDN处理文件请求失败', 'deliverFile');
     }
   }
 

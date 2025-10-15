@@ -26,21 +26,21 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (exception instanceof HttpException) {
       status = exception.getStatus();
       message = exception.message;
-      
-      // 获取HttpException的详细信息
+
       const exceptionResponse = exception.getResponse();
       if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
         errorDetails = exceptionResponse;
       }
     } else {
       status = HttpStatus.INTERNAL_SERVER_ERROR;
-      
-      // 处理非HttpException的错误
       if (exception instanceof Error) {
         message = exception.message || '服务器内部错误';
         errorDetails = {
           name: exception.name,
-          stack: process.env.NODE_ENV === 'development' ? exception.stack : undefined,
+          stack:
+            process.env.NODE_ENV === 'development'
+              ? exception.stack
+              : undefined,
         };
       } else {
         message = '服务器内部错误';
@@ -48,17 +48,16 @@ export class AllExceptionsFilter implements ExceptionFilter {
       }
     }
 
-    // 记录错误日志
     this.logger.error(
       `异常捕获 - ${request.method} ${request.url} - ${status} - ${message}`,
-      exception instanceof Error ? exception.stack : exception,
     );
 
     const errorResponse = {
       success: false,
       data: null,
       message,
-      ...(process.env.NODE_ENV === 'development' && errorDetails && { errorDetails }),
+      ...(process.env.NODE_ENV === 'development' &&
+        errorDetails && { errorDetails }),
     };
 
     response.status(status).json(errorResponse);

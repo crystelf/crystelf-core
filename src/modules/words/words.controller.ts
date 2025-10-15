@@ -73,8 +73,7 @@ export class WordsController {
 
       return text;
     } catch (e) {
-      this.logger.error(`getText 失败: ${e}`);
-      throw ErrorUtil.handleUnknownError(e, '获取文案失败');
+      throw ErrorUtil.handleUnknownError(e, '获取文案失败', 'getText');
     }
   }
 
@@ -110,8 +109,7 @@ export class WordsController {
         throw ErrorUtil.createBusinessError('重载失败', HttpStatus.BAD_REQUEST);
       }
     } catch (e) {
-      this.logger.error(`reloadWord 失败: ${e}`);
-      throw ErrorUtil.handleUnknownError(e, '重载文案失败');
+      throw ErrorUtil.handleUnknownError(e, '重载文案失败', 'reloadWord');
     }
   }
 
@@ -134,8 +132,7 @@ export class WordsController {
       }
       return names;
     } catch (e) {
-      this.logger.error(`listWords 失败: ${e}`);
-      throw ErrorUtil.handleUnknownError(e, '获取文案列表失败');
+      throw ErrorUtil.handleUnknownError(e, '获取文案列表失败', 'listWords');
     }
   }
 }

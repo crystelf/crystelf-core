@@ -177,8 +177,7 @@ export class MemeController {
         stream.pipe(throttle).pipe(res);
       }
     } catch (e) {
-      this.logger.error(`获取表情包失败:${e.message}`);
-      throw ErrorUtil.handleUnknownError(e, '获取表情包失败');
+      throw ErrorUtil.handleUnknownError(e, '获取表情包失败', 'handleMemeRequest');
     }
   }
 
@@ -271,8 +270,7 @@ export class MemeController {
       this.logger.log(`表情包上传成功: ${remoteFilePath}`);
       return '表情上传成功..';
     } catch (error) {
-      this.logger.error('表情包上传失败:', error);
-      throw ErrorUtil.handleUnknownError(error, '上传失败');
+      throw ErrorUtil.handleUnknownError(error, '上传失败', 'uploadMeme');
     }
   }
 }
