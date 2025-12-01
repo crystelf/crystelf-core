@@ -141,7 +141,7 @@ export class FilesService {
             this.logger.error(`下载文件失败: ${localFilePath}`, error);
           }
         } else {
-          this.logger.log('本地文件已是最新..');
+          //this.logger.log('本地文件已是最新..');
         }
       }
     }
