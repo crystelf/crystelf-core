@@ -46,6 +46,8 @@ class MemeRequestDto {
 @ApiTags('Meme')
 export class MemeController {
   private readonly logger = new Logger(MemeController.name);
+  private static readonly activeConnections = new Map<string, number>();
+  private static readonly maxConnectionsPerIp = 3; // 每IP最大并发连接数
 
   constructor(
     @Inject(MemeService)
@@ -97,6 +99,33 @@ export class MemeController {
   }
 
   /**
+   * 增加IP活跃连接数
+   * @param ip IP地址
+   * @returns 是否成功增加
+   */
+  private incrementActiveConnections(ip: string): boolean {
+    const current = MemeController.activeConnections.get(ip) || 0;
+    if (current >= MemeController.maxConnectionsPerIp) {
+      return false;
+    }
+    MemeController.activeConnections.set(ip, current + 1);
+    return true;
+  }
+
+  /**
+   * 减少IP活跃连接数
+   * @param ip IP地址
+   */
+  private decrementActiveConnections(ip: string): void {
+    const current = MemeController.activeConnections.get(ip) || 0;
+    if (current <= 1) {
+      MemeController.activeConnections.delete(ip);
+    } else {
+      MemeController.activeConnections.set(ip, current - 1);
+    }
+  }
+
+  /**
    * 处理请求
    * @param dto
    * @param res
@@ -111,6 +140,15 @@ export class MemeController {
     method: string,
   ) {
     try {
+      if (!this.incrementActiveConnections(ip)) {
+        this.logger.warn(`[${method}] ${ip} 并发连接数超限`);
+        res.status(429).json({
+          success: false,
+          message: '请求过于频繁,请稍后再试',
+        });
+        return;
+      }
+
       const realToken = dto.token;
       const hasValidToken =
         realToken && this.toolsService.checkToken(realToken);
@@ -121,6 +159,7 @@ export class MemeController {
       );
 
       if (!memePath) {
+        this.decrementActiveConnections(ip);
         throw ErrorUtil.createNotFoundError('表情包');
       }
 
@@ -146,38 +185,79 @@ export class MemeController {
         type?.mime === 'image/webp' ||
         type?.mime === 'image/apng';
 
-      //this.logger.debug(type?.mime);
-      const singleRate = 200 * 1024; // 100 KB/s * 3
+      const singleRate = 400 * 1024; // 400 KB/s
       const maxThreads = 2;
-      const maxRate = singleRate * maxThreads;
+      const maxRate = singleRate * maxThreads; // 800 KB/s 每IP
+      const trafficWindow = 60; // 流量统计窗口：60秒
+      const cleanup = () => {
+        this.decrementActiveConnections(ip);
+      };
 
       if (hasValidToken) {
         this.logger.log(`[${method}] 有token的入不限速 => ${memePath}`);
         stream.pipe(res);
+        stream.on('end', cleanup);
+        stream.on('error', cleanup);
       } else {
-        stream.on('data', async (chunk) => {
-          const bytes = chunk.length;
-          const total = await this.redisService.incrementIpTraffic(
-            ip,
-            bytes,
-            1,
-          );
-          if (total > maxRate && !isAnimatedImage) {
-            this.logger.warn(`[${method}] ${ip} 超过速率限制,断开连接..`);
-            stream.destroy();
-            res.end();
+        let totalBytes = 0;
+
+        stream.on('data', (chunk) => {
+          totalBytes += chunk.length;
+        });
+
+        stream.on('end', async () => {
+          cleanup();
+          try {
+            await this.redisService.incrementIpTraffic(
+              ip,
+              totalBytes,
+              trafficWindow,
+            );
+          } catch (error) {
+            this.logger.error(`更新流量统计失败: ${error.message}`);
           }
         });
 
+        stream.on('error', (error) => {
+          cleanup();
+          this.logger.error(`流传输错误: ${error.message}`);
+        });
+        try {
+          const currentTraffic = await this.redisService.getIpTraffic(ip);
+          if (currentTraffic > maxRate && !isAnimatedImage) {
+            this.logger.warn(
+              `[${method}] ${ip} 流量超限 (${currentTraffic} > ${maxRate}), 拒绝请求`,
+            );
+            stream.destroy();
+            this.decrementActiveConnections(ip);
+            res.status(429).json({
+              success: false,
+              message: '请求过于频繁，请稍后再试',
+            });
+            return;
+          }
+        } catch (error) {
+          this.logger.error(`检查流量失败: ${error.message}`);
+        }
+
         const throttle = new Throttle({ rate: singleRate });
         this.logger.log(
-          `[${method}] 白嫖入限速! (${ip}) => ${memePath}
-          `,
+          `[${method}] 白嫖入限速! (${ip}) => ${memePath} (${isAnimatedImage ? '动态图片不限速' : '静态图片限速'})`,
         );
-        stream.pipe(throttle).pipe(res);
+
+        if (isAnimatedImage) {
+          stream.pipe(res);
+        } else {
+          stream.pipe(throttle).pipe(res);
+        }
       }
     } catch (e) {
-      throw ErrorUtil.handleUnknownError(e, '获取表情包失败', 'handleMemeRequest');
+      this.decrementActiveConnections(ip);
+      throw ErrorUtil.handleUnknownError(
+        e,
+        '获取表情包失败',
+        'handleMemeRequest',
+      );
     }
   }
 
