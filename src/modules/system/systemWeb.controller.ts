@@ -1,4 +1,4 @@
-import { Controller, Post, Inject, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Inject, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBody, ApiHeader } from '@nestjs/swagger';
 import { SystemWebService } from './systemWeb.service';
 import { TokenAuthGuard } from '../../core/tools/token-auth.guard';
@@ -52,5 +52,17 @@ export class SystemWebController {
   })
   public async getRestartTime(): Promise<string> {
     return await this.systemService.getRestartTime();
+  }
+
+  /**
+   * Ping接口
+   */
+  @Get('ping')
+  @ApiOperation({
+    summary: 'Ping测试',
+    description: '嗨,服务器没事',
+  })
+  public async ping(): Promise<string> {
+    return 'pong';
   }
 }
