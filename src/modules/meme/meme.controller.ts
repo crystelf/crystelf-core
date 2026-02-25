@@ -24,9 +24,6 @@ import {
 import { MemeService } from './meme.service';
 import { Response } from 'express';
 import * as fs from 'fs';
-import { Throttle } from 'stream-throttle';
-import { ToolsService } from '../../core/tools/tools.service';
-import { RedisService } from '../../core/redis/redis.service';
 import imageType from 'image-type';
 import { FileInterceptor } from '@nestjs/platform-express';
 import * as path from 'path';
@@ -52,10 +49,6 @@ export class MemeController {
   constructor(
     @Inject(MemeService)
     private readonly memeService: MemeService,
-    @Inject(ToolsService)
-    private readonly toolsService: ToolsService,
-    @Inject(RedisService)
-    private readonly redisService: RedisService,
     @Inject(OpenListService)
     private readonly openListService: OpenListService,
     @Inject(PathService)
@@ -149,10 +142,6 @@ export class MemeController {
         return;
       }
 
-      const realToken = dto.token;
-      const hasValidToken =
-        realToken && this.toolsService.checkToken(realToken);
-
       const memePath = await this.memeService.getRandomMemePath(
         dto.character,
         dto.status,
@@ -179,78 +168,17 @@ export class MemeController {
       const fd = await fs.promises.open(memePath, 'r');
       const { buffer } = await fd.read(Buffer.alloc(4100), 0, 4100, 0);
       await fd.close();
-      const type = await imageType(buffer);
-      const isAnimatedImage =
-        type?.mime === 'image/gif' ||
-        type?.mime === 'image/webp' ||
-        type?.mime === 'image/apng';
 
-      const singleRate = 400 * 1024; // 400 KB/s
-      const maxThreads = 2;
-      const maxRate = singleRate * maxThreads; // 800 KB/s 每IP
-      const trafficWindow = 60; // 流量统计窗口：60秒
       const cleanup = () => {
         this.decrementActiveConnections(ip);
       };
 
-      if (hasValidToken) {
-        this.logger.log(`[${method}] 有token的入不限速 => ${memePath}`);
-        stream.pipe(res);
-        stream.on('end', cleanup);
-        stream.on('error', cleanup);
-      } else {
-        let totalBytes = 0;
+      stream.on('end', cleanup);
+      stream.on('error', cleanup);
 
-        stream.on('data', (chunk) => {
-          totalBytes += chunk.length;
-        });
+      this.logger.log(`[${method}] ${ip} => ${memePath}`);
 
-        stream.on('end', async () => {
-          cleanup();
-          try {
-            await this.redisService.incrementIpTraffic(
-              ip,
-              totalBytes,
-              trafficWindow,
-            );
-          } catch (error) {
-            this.logger.error(`更新流量统计失败: ${error.message}`);
-          }
-        });
-
-        stream.on('error', (error) => {
-          cleanup();
-          this.logger.error(`流传输错误: ${error.message}`);
-        });
-        try {
-          const currentTraffic = await this.redisService.getIpTraffic(ip);
-          if (currentTraffic > maxRate && !isAnimatedImage) {
-            this.logger.warn(
-              `[${method}] ${ip} 流量超限 (${currentTraffic} > ${maxRate}), 拒绝请求`,
-            );
-            stream.destroy();
-            this.decrementActiveConnections(ip);
-            res.status(429).json({
-              success: false,
-              message: '请求过于频繁，请稍后再试',
-            });
-            return;
-          }
-        } catch (error) {
-          this.logger.error(`检查流量失败: ${error.message}`);
-        }
-
-        const throttle = new Throttle({ rate: singleRate });
-        this.logger.log(
-          `[${method}] 白嫖入限速! (${ip}) => ${memePath} (${isAnimatedImage ? '动态图片不限速' : '静态图片限速'})`,
-        );
-
-        if (isAnimatedImage) {
-          stream.pipe(res);
-        } else {
-          stream.pipe(throttle).pipe(res);
-        }
-      }
+      stream.pipe(res);
     } catch (e) {
       this.decrementActiveConnections(ip);
       throw ErrorUtil.handleUnknownError(
